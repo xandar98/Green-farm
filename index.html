@@ -1,1 +1,2974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Green Farm Classic</title>
+    <!-- Tailwind CSS for responsive layout & UI polish -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Telegram Mini App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Inter & Fredoka fonts for classic warm farming game typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Core reset & mobile touch optimization */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
+            background-color: #4f9e35;
+            font-family: 'Fredoka', 'Inter', sans-serif;
+        }
 
+        /* Warm classic Green Farm wooden & parchment UI tokens */
+        .wood-panel {
+            background: linear-gradient(180deg, #9c5e2b 0%, #7d471d 55%, #653613 100%);
+            border: 2.5px solid #4a250b;
+            box-shadow: inset 0 2px 0 rgba(255, 222, 173, 0.35), 0 4px 10px rgba(0, 0, 0, 0.35);
+        }
+        .parchment-panel {
+            background: linear-gradient(180deg, #fff9e6 0%, #f7e8c4 100%);
+            border: 3px solid #7d471d;
+            box-shadow: inset 0 0 0 2px #e6cca0, 0 12px 30px rgba(0, 0, 0, 0.45);
+            color: #4a2c11;
+        }
+        .hud-pill {
+            background: linear-gradient(180deg, rgba(46, 24, 9, 0.85) 0%, rgba(74, 39, 15, 0.92) 100%);
+            border: 2px solid #d49a47;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .game-btn {
+            transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.12s ease;
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 3px 0 rgba(0, 0, 0, 0.35);
+        }
+        .game-btn:active {
+            transform: scale(0.93) translateY(2px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 0 rgba(0, 0, 0, 0.35);
+        }
+        .btn-green {
+            background: linear-gradient(180deg, #6bd638 0%, #42a81c 100%);
+            border: 2px solid #266b0c;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        .btn-amber {
+            background: linear-gradient(180deg, #ffcf40 0%, #e69512 100%);
+            border: 2px solid #8c5006;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        .btn-blue {
+            background: linear-gradient(180deg, #4db8ff 0%, #1c7ed6 100%);
+            border: 2px solid #0e4a80;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        .btn-red {
+            background: linear-gradient(180deg, #ff6b6b 0%, #d63031 100%);
+            border: 2px solid #7d1515;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        .tool-btn {
+            background: linear-gradient(180deg, #ffecc4 0%, #e3be84 100%);
+            border: 2.5px solid #6b3b15;
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7), 0 3px 0 #4a250b;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+        .tool-btn.active {
+            background: linear-gradient(180deg, #98f051 0%, #48b81d 100%);
+            border-color: #1f6106;
+            transform: translateY(-4px) scale(1.06);
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.75), 0 5px 12px rgba(72, 184, 29, 0.55);
+        }
+        .tool-btn.active span {
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Animations */
+        @keyframes pulseBadge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.18); }
+        }
+        .badge-pulse {
+            animation: pulseBadge 1.4s infinite ease-in-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(24px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.82); opacity: 0; }
+            70% { transform: scale(1.03); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* Custom subtle scrollbar for modal drawers */
+        .custom-scroll::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(125, 71, 29, 0.12);
+            border-radius: 99px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(125, 71, 29, 0.45);
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body class="relative w-full h-full select-none overflow-hidden">
+
+    <!-- Main Full-Screen Isometric Canvas -->
+    <canvas id="farmCanvas" class="block w-full h-full"></canvas>
+
+    <!-- ================= TOP HUD BAR ================= -->
+    <header class="fixed top-0 left-0 right-0 z-30 pointer-events-none px-2 pt-2 sm:px-4 sm:pt-3">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
+            <!-- Left: Level Star + XP Bar + Currencies -->
+            <div class="flex items-center flex-wrap gap-1.5 sm:gap-2 pointer-events-auto">
+                <!-- Level & XP -->
+                <div class="hud-pill rounded-2xl px-2 py-1 flex items-center gap-1.5 cursor-pointer" onclick="showToast(`Level ${state.level}: ${state.xp}/${getXpForNextLevel(state.level)} XP`)">
+                    <div class="relative w-8 h-8 flex items-center justify-center shrink-0">
+                        <svg viewBox="0 0 36 36" class="w-8 h-8 drop-shadow">
+                            <polygon points="18,2 23,12 34,13.5 26,21 28,32 18,26.5 8,32 10,21 2,13.5 13,12" fill="#ffd43b" stroke="#b36b00" stroke-width="2"/>
+                        </svg>
+                        <span id="hud-level" class="absolute text-xs font-bold text-[#613400] mt-0.5">1</span>
+                    </div>
+                    <div class="flex flex-col w-14 sm:w-20">
+                        <div class="flex justify-between text-[10px] leading-none text-amber-100 font-semibold mb-1">
+                            <span>XP</span>
+                            <span id="hud-xp-text">0/50</span>
+                        </div>
+                        <div class="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-amber-500/40">
+                            <div id="hud-xp-bar" class="h-full bg-gradient-to-r from-sky-400 to-cyan-300 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coins -->
+                <div class="hud-pill rounded-full px-2.5 py-1 flex items-center gap-1 text-amber-200 font-bold text-xs sm:text-sm">
+                    <span class="text-sm sm:text-base drop-shadow">🪙</span>
+                    <span id="hud-coins">250</span>
+                </div>
+
+                <!-- Green Cash -->
+                <div class="hud-pill rounded-full px-2.5 py-1 flex items-center gap-1 text-emerald-300 font-bold text-xs sm:text-sm">
+                    <span class="text-sm sm:text-base drop-shadow">💵</span>
+                    <span id="hud-cash">8</span>
+                </div>
+
+                <!-- Energy -->
+                <div class="hud-pill rounded-full px-2.5 py-1 flex items-center gap-1 text-yellow-300 font-bold text-xs sm:text-sm" title="Auto-regenerates every 10s">
+                    <span class="text-sm sm:text-base drop-shadow">⚡</span>
+                    <span id="hud-energy">30/30</span>
+                    <span id="hud-energy-timer" class="text-[10px] text-amber-100/80 font-medium hidden"></span>
+                </div>
+            </div>
+
+            <!-- Right: Quests, Barn, Mute, Settings -->
+            <div class="flex items-center gap-1.5 pointer-events-auto shrink-0">
+                <button onclick="openModal('quests')" class="relative game-btn btn-amber w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-lg" aria-label="Quests">
+                    📜
+                    <span id="quest-badge" class="hidden absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 border-2 border-white text-[10px] font-bold text-white flex items-center justify-center badge-pulse">!</span>
+                </button>
+                <button onclick="openModal('market', 'barn')" class="game-btn btn-green w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-lg" aria-label="Barn Storage">
+                    🧺
+                </button>
+                <button id="btn-mute" onclick="toggleMute()" class="game-btn btn-blue w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-base" aria-label="Sound">
+                    🔊
+                </button>
+                <button onclick="openModal('settings')" class="game-btn wood-panel w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-base text-amber-100" aria-label="Settings">
+                    ⚙️
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= CAMERA ZOOM CONTROLS (Right Edge) ================= -->
+    <div class="fixed right-2.5 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2 pointer-events-auto">
+        <button onclick="adjustZoom(0.18)" class="game-btn wood-panel w-10 h-10 rounded-xl text-amber-100 font-bold text-xl flex items-center justify-center" aria-label="Zoom In">+</button>
+        <button onclick="adjustZoom(-0.18)" class="game-btn wood-panel w-10 h-10 rounded-xl text-amber-100 font-bold text-xl flex items-center justify-center" aria-label="Zoom Out">−</button>
+        <button onclick="centerCamera()" class="game-btn wood-panel w-10 h-10 rounded-xl text-amber-100 text-base flex items-center justify-center" aria-label="Center Farm">🎯</button>
+    </div>
+
+    <!-- ================= TOAST MESSAGE ================= -->
+    <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-1.5 w-[90%] max-w-sm"></div>
+
+    <!-- ================= ACTIVE MODE BANNER ================= -->
+    <div id="mode-banner" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+        <div class="wood-panel rounded-full px-4 py-1.5 flex items-center gap-2.5 text-amber-50 text-xs sm:text-sm font-semibold shadow-xl">
+            <span id="mode-banner-text">Mode Active</span>
+            <button onclick="setMode('hand')" class="bg-red-600 hover:bg-red-500 text-white rounded-full px-2.5 py-0.5 text-xs font-bold border border-red-900">✕ Done</button>
+        </div>
+    </div>
+
+    <!-- ================= SEEDS BOTTOM DRAWER ================= -->
+    <div id="seed-drawer" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-30 w-[96%] max-w-2xl pointer-events-auto animate-slide-up">
+        <div class="parchment-panel rounded-2xl p-2.5 sm:p-3">
+            <div class="flex items-center justify-between mb-2 px-1">
+                <span class="font-bold text-sm sm:text-base text-[#5c300c] flex items-center gap-1.5">🌱 Select Seeds to Plant</span>
+                <button onclick="closeSeedDrawer()" class="text-xs font-bold bg-[#7d471d] text-amber-50 px-2.5 py-1 rounded-full">Close ✕</button>
+            </div>
+            <div id="seed-list" class="flex gap-2 overflow-x-auto custom-scroll pb-1"></div>
+        </div>
+    </div>
+
+    <!-- ================= CIRCULAR PROGRESS TOOLTIP (Tapping Growing Entity) ================= -->
+    <div id="inspect-popup" class="hidden fixed z-40 pointer-events-auto animate-pop-in" style="left: 50%; top: 45%; transform: translate(-50%, -50%);">
+        <div class="parchment-panel rounded-2xl p-3.5 w-60 flex flex-col items-center text-center relative">
+            <button onclick="closeInspect()" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-amber-900/15 hover:bg-amber-900/25 text-amber-950 font-bold text-xs flex items-center justify-center">✕</button>
+            <div class="relative w-20 h-20 flex items-center justify-center mb-1.5">
+                <svg class="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                    <circle cx="40" cy="40" r="34" fill="#fff7dc" stroke="#e2c896" stroke-width="6"/>
+                    <circle id="inspect-ring" cx="40" cy="40" r="34" fill="none" stroke="#48b81d" stroke-width="6" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="100"/>
+                </svg>
+                <span id="inspect-icon" class="absolute text-3xl">🌾</span>
+            </div>
+            <h3 id="inspect-title" class="font-bold text-base text-[#4a250b] leading-tight">Wheat</h3>
+            <p id="inspect-sub" class="text-xs font-semibold text-amber-800 mb-3">Ready in 12s</p>
+            <div id="inspect-actions" class="w-full flex flex-col gap-1.5">
+                <button id="inspect-instant-btn" onclick="instantFinishInspected()" class="game-btn btn-green w-full py-2 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
+                    ⚡ Instant Grow (1 💵)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= BOTTOM ACTION TOOLBAR ================= -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none px-2 pb-2 sm:pb-3">
+        <div class="max-w-md mx-auto wood-panel rounded-2xl px-2 py-1.5 flex items-center justify-around gap-1.5 pointer-events-auto">
+            <button id="tool-hand" onclick="setMode('hand')" class="tool-btn active flex-1 py-1.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-xl sm:text-2xl leading-none">✋</span>
+                <span class="text-[10px] sm:text-xs font-bold text-[#52290a] mt-0.5">Interact</span>
+            </button>
+            <button id="tool-plow" onclick="setMode('plow')" class="tool-btn flex-1 py-1.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-xl sm:text-2xl leading-none">⛏️</span>
+                <span class="text-[10px] sm:text-xs font-bold text-[#52290a] mt-0.5">Plow</span>
+            </button>
+            <button id="tool-plant" onclick="toggleSeedDrawer()" class="tool-btn flex-1 py-1.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-xl sm:text-2xl leading-none">🌱</span>
+                <span class="text-[10px] sm:text-xs font-bold text-[#52290a] mt-0.5">Seeds</span>
+            </button>
+            <button id="tool-shop" onclick="openModal('shop', 'animals')" class="tool-btn flex-1 py-1.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-xl sm:text-2xl leading-none">🏡</span>
+                <span class="text-[10px] sm:text-xs font-bold text-[#52290a] mt-0.5">Build</span>
+            </button>
+            <button id="tool-market" onclick="openModal('market', 'orders')" class="tool-btn flex-1 py-1.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-xl sm:text-2xl leading-none">🏪</span>
+                <span class="text-[10px] sm:text-xs font-bold text-[#52290a] mt-0.5">Market</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= UNIVERSAL MODAL BACKDROP ================= -->
+    <div id="modal-backdrop" class="hidden fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px] flex items-center justify-center p-3" onclick="if(event.target===this) closeModal()">
+        <div id="modal-card" class="parchment-panel rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-pop-in">
+            <!-- Modal Header -->
+            <div class="wood-panel px-4 py-3 flex items-center justify-between text-amber-50 rounded-t-[20px]">
+                <h2 id="modal-title" class="font-bold text-lg tracking-wide flex items-center gap-2">Modal</h2>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-red-600 border-2 border-red-950 text-white font-bold flex items-center justify-center text-sm shadow">✕</button>
+            </div>
+            <!-- Optional Modal Tabs -->
+            <div id="modal-tabs" class="hidden bg-[#ecd8b0] px-3 pt-2 pb-1.5 flex gap-1.5 overflow-x-auto custom-scroll border-b-2 border-[#c9a870]"></div>
+            <!-- Modal Content -->
+            <div id="modal-body" class="p-3.5 sm:p-4 overflow-y-auto custom-scroll flex-1"></div>
+        </div>
+    </div>
+
+    <script>
+    /* ============================================================================
+       1. TELEGRAM MINI APP INITIALIZATION & SAFE SETUP
+       ============================================================================ */
+    (function initTelegram() {
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+                if (typeof window.Telegram.WebApp.disableVerticalSwipes === 'function') {
+                    window.Telegram.WebApp.disableVerticalSwipes();
+                }
+            }
+        } catch (err) {
+            console.warn('Telegram WebApp SDK unavailable:', err);
+        }
+    })();
+
+    /* ============================================================================
+       2. GAME DATA CATALOG (CROPS, ANIMALS, TREES, MACHINES, RECIPES, DECOR, QUESTS)
+       ============================================================================ */
+    const GRID_SIZE = 14;
+    const TILE_W = 88;
+    const TILE_H = 44;
+    const PLOW_COST = 15;
+    const MAX_ENERGY = 30;
+    const ENERGY_REGEN_MS = 10000; // +1 energy every 10 seconds
+    const SAVE_KEY = 'green_farm_classic_save_v1';
+
+    const CROPS = {
+        wheat:      { id: 'wheat',      name: 'Wheat',      icon: '🌾', time: 8,  cost: 10,  sell: 22,  xp: 6,  lvl: 1, color: '#f3c63f' },
+        corn:       { id: 'corn',       name: 'Corn',       icon: '🌽', time: 15, cost: 20,  sell: 46,  xp: 10, lvl: 1, color: '#ffd93b' },
+        carrot:     { id: 'carrot',     name: 'Carrot',     icon: '🥕', time: 20, cost: 28,  sell: 65,  xp: 12, lvl: 1, color: '#f97316' },
+        tomato:     { id: 'tomato',     name: 'Tomato',     icon: '🍅', time: 30, cost: 40,  sell: 96,  xp: 16, lvl: 2, color: '#ef4444' },
+        strawberry: { id: 'strawberry', name: 'Strawberry', icon: '🍓', time: 45, cost: 60,  sell: 148, xp: 22, lvl: 2, color: '#ec4899' },
+        sunflower:  { id: 'sunflower',  name: 'Sunflower',  icon: '🌻', time: 50, cost: 75,  sell: 190, xp: 26, lvl: 3, color: '#eab308' },
+        pumpkin:    { id: 'pumpkin',    name: 'Pumpkin',    icon: '🎃', time: 60, cost: 100, sell: 260, xp: 34, lvl: 3, color: '#ea580c' }
+    };
+
+    const ANIMALS = {
+        chicken: { id: 'chicken', name: 'Chicken', icon: '🐔', cost: 120, lvl: 1, time: 20, product: 'egg',  xp: 12, desc: 'Produces fresh Farm Eggs' },
+        cow:     { id: 'cow',     name: 'Cow',     icon: '🐄', cost: 320, lvl: 2, time: 35, product: 'milk', xp: 20, desc: 'Produces creamy Milk' },
+        sheep:   { id: 'sheep',   name: 'Sheep',   icon: '🐑', cost: 520, lvl: 3, time: 45, product: 'wool', xp: 26, desc: 'Produces fluffy Wool' }
+    };
+
+    const TREES = {
+        apple_tree:  { id: 'apple_tree',  name: 'Apple Tree',  icon: '🍎', cost: 160, lvl: 1, time: 25, product: 'apple',  xp: 14, desc: 'Grows crisp Red Apples' },
+        orange_tree: { id: 'orange_tree', name: 'Orange Tree', icon: '🍊', cost: 290, lvl: 2, time: 35, product: 'orange', xp: 20, desc: 'Grows juicy Oranges' }
+    };
+
+    const MACHINES = {
+        bakery: {
+            id: 'bakery', name: 'Bakery Mill', icon: '🥖', cost: 240, lvl: 1, xp: 25,
+            desc: 'Bakes warm Bread & Apple Pies',
+            recipes: [
+                { id: 'bread',     name: 'Country Bread', icon: '🍞', inputs: { wheat: 2 },            time: 14, sell: 140, xp: 24 },
+                { id: 'apple_pie', name: 'Apple Pie',     icon: '🥧', inputs: { apple: 2, wheat: 1 },  time: 22, sell: 280, xp: 38 }
+            ]
+        },
+        dairy: {
+            id: 'dairy', name: 'Dairy Press', icon: '🧀', cost: 420, lvl: 2, xp: 35,
+            desc: 'Presses Milk into Artisan Cheese',
+            recipes: [
+                { id: 'cheese', name: 'Farm Cheese', icon: '🧀', inputs: { milk: 2 },         time: 18, sell: 360, xp: 36 },
+                { id: 'butter', name: 'Sweet Butter', icon: '🧈', inputs: { milk: 1, egg: 1 }, time: 16, sell: 250, xp: 28 }
+            ]
+        }
+    };
+
+    const DECORS = {
+        flower_bed: { id: 'flower_bed', name: 'Flower Bed',  icon: '🌷', cost: 60,  lvl: 1, xp: 15, desc: 'Bright blooming tulips' },
+        hay_bale:   { id: 'hay_bale',   name: 'Hay Bales',   icon: '🌾', cost: 85,  lvl: 1, xp: 18, desc: 'Cozy stacked straw' },
+        well:       { id: 'well',       name: 'Wooden Well', icon: '🪣', cost: 150, lvl: 1, xp: 25, desc: 'Classic stone farm well' },
+        scarecrow:  { id: 'scarecrow',  name: 'Scarecrow',   icon: '🎃', cost: 210, lvl: 2, xp: 35, desc: 'Friendly field guardian' }
+    };
+
+    // Unified Goods Registry for Barn & Market
+    const GOODS = {
+        wheat:      { name: 'Wheat',      icon: '🌾', sell: 22 },
+        corn:       { name: 'Corn',       icon: '🌽', sell: 46 },
+        carrot:     { name: 'Carrot',     icon: '🥕', sell: 65 },
+        tomato:     { name: 'Tomato',     icon: '🍅', sell: 96 },
+        strawberry: { name: 'Strawberry', icon: '🍓', sell: 148 },
+        sunflower:  { name: 'Sunflower',  icon: '🌻', sell: 190 },
+        pumpkin:    { name: 'Pumpkin',    icon: '🎃', sell: 260 },
+        egg:        { name: 'Farm Egg',   icon: '🥚', sell: 55 },
+        milk:       { name: 'Fresh Milk', icon: '🥛', sell: 130 },
+        wool:       { name: 'Soft Wool',  icon: '🧶', sell: 210 },
+        apple:      { name: 'Red Apple',  icon: '🍎', sell: 62 },
+        orange:     { name: 'Orange',     icon: '🍊', sell: 112 },
+        bread:      { name: 'Bread',      icon: '🍞', sell: 140 },
+        apple_pie:  { name: 'Apple Pie',  icon: '🥧', sell: 280 },
+        cheese:     { name: 'Cheese',     icon: '🧀', sell: 360 },
+        butter:     { name: 'Butter',     icon: '🧈', sell: 250 }
+    };
+
+    // Sequential Farmer Uncle Quests
+    const QUESTS = [
+        { id: 'q1',  title: 'First Harvest!',     desc: 'Tap the ripe golden Wheat plots to harvest 2 Wheat.',   type: 'harvest_wheat', target: 2,  coins: 60,  xp: 22, cash: 1, uncle: 'Welcome back to the old family farm! Let’s harvest those ripe wheat plots first.' },
+        { id: 'q2',  title: 'Till the Soil',      desc: 'Use the Plow tool to till 2 new soil plots.',           type: 'plow',          target: 2,  coins: 80,  xp: 26, cash: 1, uncle: 'Splendid! Now grab your Plow tool from the bottom bar and prepare 2 fresh soil plots.' },
+        { id: 'q3',  title: 'Golden Cornfields',  desc: 'Open Seeds and plant 2 Corn crops.',                    type: 'plant_corn',    target: 2,  coins: 95,  xp: 30, cash: 1, uncle: 'Rich soil deserves great crops! Open the Seeds drawer and plant 2 Corn stalks.' },
+        { id: 'q4',  title: 'Fresh Morning Eggs', desc: 'Tap your Chicken to collect 1 fresh Egg.',              type: 'collect_egg',   target: 1,  coins: 110, xp: 32, cash: 2, uncle: 'Hear that clucking? Your little hen laid an egg! Tap her to collect it.' },
+        { id: 'q5',  title: 'Warm Bakery Aroma',  desc: 'Tap the Bakery Mill and bake 1 Country Bread.',         type: 'craft_bread',   target: 1,  coins: 160, xp: 45, cash: 2, uncle: 'Turn your Wheat into golden profit! Tap the Bakery Mill to bake a loaf of Bread.' },
+        { id: 'q6',  title: 'Rising Star Farmer', desc: 'Earn XP from farming to reach Level 2.',                type: 'reach_level',   target: 2,  coins: 200, xp: 50, cash: 3, uncle: 'You are a natural! Keep planting, harvesting, and baking until you reach Level 2.' },
+        { id: 'q7',  title: 'Moo-velous Friend',  desc: 'Open Build > Animals and place a Cow on your farm.',    type: 'buy_cow',       target: 1,  coins: 320, xp: 65, cash: 3, uncle: 'Level 2 unlocks Dairy Cows! Visit the Build shop and welcome a Cow to the pasture.' },
+        { id: 'q8',  title: 'Village Market Day', desc: 'Fulfill 2 customer orders on the Market Board.',        type: 'order',         target: 2,  coins: 400, xp: 85, cash: 4, uncle: 'The townsfolk love your fresh goods! Open Market and deliver 2 customer orders.' },
+        { id: 'q9',  title: 'Artisan Cheesemaker',desc: 'Build a Dairy Press and craft 1 Farm Cheese.',          type: 'craft_cheese',  target: 1,  coins: 520, xp: 100,cash: 5, uncle: 'Fresh milk makes heavenly cheese. Build a Dairy Press and craft your first Cheese!' },
+        { id: 'q10', title: 'Master of Green Farm',desc: 'Harvest 12 crops of any kind.',                        type: 'harvest_any',   target: 12, coins: 750, xp: 150,cash: 8, uncle: 'Our little farm is thriving! Harvest 12 crops to earn the title of Master Farmer!' }
+    ];
+
+    const CUSTOMER_NAMES = [
+        { name: 'Baker Mia', icon: '👩‍🍳' },
+        { name: 'Chef Marco', icon: '👨‍🍳' },
+        { name: 'Mayor Barnaby', icon: '🎩' },
+        { name: 'Lily the Florist', icon: '👩‍🌾' },
+        { name: 'Old Sam', icon: '👴' }
+    ];
+
+    /* ============================================================================
+       3. SYNTHESIZED WEB AUDIO ENGINE (NO EXTERNAL AUDIO FILES)
+       ============================================================================ */
+    const Sound = {
+        ctx: null,
+        muted: false,
+        unlock() {
+            if (!this.ctx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) this.ctx = new AC();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(() => {});
+            }
+        },
+        tone(freq, dur, type = 'sine', vol = 0.14, delay = 0, freqEnd = null) {
+            if (this.muted) return;
+            try {
+                this.unlock();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime + delay;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+                if (freqEnd !== null) {
+                    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), now + dur);
+                }
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(vol, now + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + dur + 0.02);
+            } catch (e) {}
+        },
+        playPlow() {
+            this.tone(135, 0.14, 'triangle', 0.22, 0, 52);
+            this.tone(90, 0.10, 'sawtooth', 0.08, 0.02, 40);
+        },
+        playPlant() {
+            this.tone(280, 0.11, 'sine', 0.15, 0, 520);
+            this.tone(420, 0.09, 'triangle', 0.1, 0.05, 640);
+        },
+        playHarvest() {
+            this.tone(523.25, 0.14, 'triangle', 0.15, 0);
+            this.tone(659.25, 0.14, 'triangle', 0.15, 0.06);
+            this.tone(783.99, 0.20, 'sine', 0.16, 0.12);
+        },
+        playCoin() {
+            this.tone(987.77, 0.10, 'sine', 0.13, 0);
+            this.tone(1318.5, 0.22, 'sine', 0.15, 0.07);
+        },
+        playBuild() {
+            this.tone(190, 0.10, 'square', 0.10, 0, 120);
+            this.tone(320, 0.12, 'triangle', 0.14, 0.08, 440);
+        },
+        playFeed() {
+            this.tone(440, 0.09, 'sine', 0.13, 0, 620);
+            this.tone(587, 0.12, 'sine', 0.13, 0.08, 720);
+        },
+        playLevelUp() {
+            const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+            notes.forEach((n, i) => this.tone(n, 0.26, 'triangle', 0.17, i * 0.09));
+        },
+        playError() {
+            this.tone(200, 0.14, 'sawtooth', 0.08, 0, 130);
+        }
+    };
+
+    /* ============================================================================
+       4. GAME STATE & PERSISTENCE
+       ============================================================================ */
+    let state = null;
+    let currentMode = 'hand'; // 'hand' | 'plow' | 'plant' | 'build'
+    let selectedSeed = 'wheat';
+    let selectedBuild = null; // { category, id }
+    let inspectedTile = null; // { gx, gy }
+    let activeModal = null;
+    let activeModalTab = null;
+    let hoveredTile = null;
+
+    // Visual effects arrays
+    const particles = [];
+    const popups = [];
+    const clouds = [];
+    const smokePuffs = [];
+    const pondRipples = [];
+
+    function getXpForNextLevel(lvl) {
+        return Math.floor(50 * Math.pow(1.48, lvl - 1));
+    }
+
+    function createEmptyGrid() {
+        const g = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            const row = [];
+            for (let x = 0; x < GRID_SIZE; x++) {
+                row.push({ type: 'grass' });
+            }
+            g.push(row);
+        }
+        return g;
+    }
+
+    function createStarterState() {
+        const now = Date.now();
+        const grid = createEmptyGrid();
+
+        // Starter farm layout around center of 14x14 grid
+        // 4 plowed plots: 2 already ripe with Wheat, 2 empty plowed
+        grid[6][6] = { type: 'plot', crop: 'wheat', plantedAt: now - 30000, readyAt: now - 1000 };
+        grid[7][6] = { type: 'plot', crop: 'wheat', plantedAt: now - 30000, readyAt: now - 1000 };
+        grid[6][7] = { type: 'plot', crop: null };
+        grid[7][7] = { type: 'plot', crop: null };
+
+        // 1 Chicken (Ready with a fresh Egg immediately!)
+        grid[6][4] = { type: 'animal', id: 'chicken', status: 'ready', startedAt: now - 30000, readyAt: now - 1000 };
+
+        // 1 Apple Tree (Bearing ripe apples!)
+        grid[8][4] = { type: 'tree', id: 'apple_tree', startedAt: now - 35000, readyAt: now - 1000 };
+
+        // 1 Bakery Mill building
+        grid[4][5] = { type: 'machine', id: 'bakery', recipe: null, startedAt: 0, readyAt: 0 };
+
+        // Charming starter decorations
+        grid[4][8] = { type: 'decor', id: 'flower_bed' };
+        grid[9][8] = { type: 'decor', id: 'hay_bale' };
+
+        const st = {
+            coins: 250,
+            cash: 8,
+            xp: 0,
+            level: 1,
+            energy: MAX_ENERGY,
+            lastEnergyTime: now,
+            muted: false,
+            grid,
+            inventory: { wheat: 1 },
+            questIndex: 0,
+            questProgress: {},
+            stats: {
+                harvested: 0,
+                plowed: 0,
+                ordersFulfilled: 0,
+                crafted: 0
+            },
+            orders: []
+        };
+        st.orders = [generateOrder(1), generateOrder(1), generateOrder(1)];
+        return st;
+    }
+
+    function generateOrder(level) {
+        const cust = CUSTOMER_NAMES[Math.floor(Math.random() * CUSTOMER_NAMES.length)];
+        const pool = ['wheat', 'corn', 'carrot', 'egg', 'apple', 'bread'];
+        if (level >= 2) pool.push('tomato', 'strawberry', 'milk', 'orange', 'cheese', 'apple_pie', 'butter');
+        if (level >= 3) pool.push('sunflower', 'pumpkin', 'wool');
+
+        const numItems = Math.random() < 0.55 ? 1 : 2;
+        const reqs = {};
+        let baseValue = 0;
+
+        for (let i = 0; i < numItems; i++) {
+            const goodId = pool[Math.floor(Math.random() * pool.length)];
+            const qty = (goodId === 'wheat' || goodId === 'corn') ? (2 + Math.floor(Math.random() * 3)) : (1 + Math.floor(Math.random() * 2));
+            reqs[goodId] = (reqs[goodId] || 0) + qty;
+        }
+
+        Object.entries(reqs).forEach(([gid, q]) => {
+            baseValue += (GOODS[gid]?.sell || 20) * q;
+        });
+
+        // Orders pay 30% bonus coins + juicy XP!
+        return {
+            id: 'ord_' + Math.random().toString(36).slice(2, 9),
+            customer: cust.name,
+            avatar: cust.icon,
+            reqs,
+            rewardCoins: Math.round(baseValue * 1.32),
+            rewardXp: Math.max(15, Math.round(baseValue * 0.22))
+        };
+    }
+
+    function saveState() {
+        try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        } catch (e) {}
+    }
+
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(SAVE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && Array.isArray(parsed.grid) && parsed.grid.length === GRID_SIZE) {
+                    state = parsed;
+                    Sound.muted = !!state.muted;
+                    if (!state.orders || state.orders.length < 3) {
+                        state.orders = [generateOrder(state.level), generateOrder(state.level), generateOrder(state.level)];
+                    }
+                    return;
+                }
+            }
+        } catch (e) {}
+        state = createStarterState();
+        saveState();
+    }
+
+    /* ============================================================================
+       5. PROGRESSION, ENERGY, QUESTS & TOASTS
+       ============================================================================ */
+    function showToast(msg, tone = 'normal') {
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        const bg = tone === 'error'
+            ? 'bg-red-700/95 border-red-300 text-white'
+            : tone === 'success'
+            ? 'bg-emerald-700/95 border-emerald-200 text-white'
+            : 'bg-[#4e2a0e]/95 border-amber-300 text-amber-50';
+        el.className = `${bg} border-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold shadow-xl text-center animate-pop-in`;
+        el.textContent = msg;
+        container.appendChild(el);
+        setTimeout(() => {
+            el.style.transition = 'opacity 0.25s, transform 0.25s';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-8px)';
+            setTimeout(() => el.remove(), 260);
+        }, 2100);
+    }
+
+    function spendEnergy(amount = 1) {
+        if (state.energy < amount) {
+            Sound.playError();
+            showToast('Not enough Energy! Wait a few seconds to recharge ⚡', 'error');
+            return false;
+        }
+        if (state.energy === MAX_ENERGY) {
+            state.lastEnergyTime = Date.now();
+        }
+        state.energy -= amount;
+        updateHUD();
+        return true;
+    }
+
+    function addXp(amount, worldX, worldY) {
+        state.xp += amount;
+        if (worldX !== undefined) {
+            spawnPopup(`+${amount} ⭐`, worldX, worldY - 22, '#38bdf8');
+        }
+        let leveled = false;
+        while (state.xp >= getXpForNextLevel(state.level)) {
+            state.xp -= getXpForNextLevel(state.level);
+            state.level++;
+            leveled = true;
+        }
+        if (leveled) {
+            state.energy = MAX_ENERGY;
+            const bonusCoins = state.level * 100;
+            const bonusCash = 2;
+            state.coins += bonusCoins;
+            state.cash += bonusCash;
+            Sound.playLevelUp();
+            recordQuestProgress('reach_level', state.level, true);
+            openLevelUpModal(state.level, bonusCoins, bonusCash);
+        }
+        updateHUD();
+    }
+
+    function addCoins(amount, worldX, worldY) {
+        state.coins += amount;
+        if (worldX !== undefined) {
+            spawnPopup(`+${amount} 🪙`, worldX, worldY - 4, '#ffd43b');
+        }
+        updateHUD();
+    }
+
+    function addInventory(goodId, qty = 1) {
+        state.inventory[goodId] = (state.inventory[goodId] || 0) + qty;
+    }
+
+    function recordQuestProgress(type, amount = 1, isAbsolute = false) {
+        const q = QUESTS[state.questIndex];
+        if (!q) return;
+        if (q.type === type) {
+            const cur = state.questProgress[q.id] || 0;
+            state.questProgress[q.id] = isAbsolute ? Math.max(cur, amount) : (cur + amount);
+            if (state.questProgress[q.id] >= q.target && cur < q.target) {
+                Sound.playHarvest();
+                showToast(`📜 Quest Complete: ${q.title}! Claim your reward!`, 'success');
+            }
+        }
+        updateQuestBadge();
+    }
+
+    function getCurrentQuest() {
+        return QUESTS[state.questIndex] || null;
+    }
+
+    function isQuestReadyToClaim() {
+        const q = getCurrentQuest();
+        if (!q) return false;
+        if (q.type === 'reach_level') return state.level >= q.target;
+        return (state.questProgress[q.id] || 0) >= q.target;
+    }
+
+    function updateQuestBadge() {
+        const badge = document.getElementById('quest-badge');
+        const q = getCurrentQuest();
+        if (!q) {
+            badge.classList.add('hidden');
+            return;
+        }
+        if (isQuestReadyToClaim()) {
+            badge.textContent = '✓';
+            badge.classList.remove('hidden', 'bg-red-600');
+            badge.classList.add('bg-emerald-500');
+        } else {
+            badge.textContent = '!';
+            badge.classList.remove('hidden', 'bg-emerald-500');
+            badge.classList.add('bg-red-600');
+        }
+    }
+
+    function updateHUD() {
+        const reqXp = getXpForNextLevel(state.level);
+        document.getElementById('hud-level').textContent = state.level;
+        document.getElementById('hud-xp-text').textContent = `${state.xp}/${reqXp}`;
+        document.getElementById('hud-xp-bar').style.width = `${Math.min(100, (state.xp / reqXp) * 100)}%`;
+        document.getElementById('hud-coins').textContent = state.coins.toLocaleString();
+        document.getElementById('hud-cash').textContent = state.cash.toLocaleString();
+        document.getElementById('hud-energy').textContent = `${state.energy}/${MAX_ENERGY}`;
+        document.getElementById('btn-mute').textContent = Sound.muted ? '🔇' : '🔊';
+        updateQuestBadge();
+    }
+
+    function toggleMute() {
+        Sound.muted = !Sound.muted;
+        state.muted = Sound.muted;
+        updateHUD();
+        saveState();
+        if (!Sound.muted) Sound.playPlant();
+    }
+
+    /* ============================================================================
+       6. CAMERA, COORDINATE PROJECTION & TOUCH/MOUSE INPUT
+       ============================================================================ */
+    const canvas = document.getElementById('farmCanvas');
+    const ctx = canvas.getContext('2d');
+    let dpr = 1;
+    let viewW = window.innerWidth;
+    let viewH = window.innerHeight;
+
+    const cam = {
+        x: 0,
+        y: 310,
+        zoom: 1,
+        targetX: 0,
+        targetY: 310,
+        targetZoom: 1
+    };
+
+    function resizeCanvas() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        viewW = window.innerWidth;
+        viewH = window.innerHeight;
+        canvas.width = Math.floor(viewW * dpr);
+        canvas.height = Math.floor(viewH * dpr);
+        canvas.style.width = viewW + 'px';
+        canvas.style.height = viewH + 'px';
+    }
+
+    function centerCamera() {
+        const centerWorld = gridToWorld(GRID_SIZE / 2 - 0.5, GRID_SIZE / 2 - 0.5);
+        cam.targetX = centerWorld.x;
+        cam.targetY = centerWorld.y + 10;
+        cam.targetZoom = viewW < 640 ? 0.85 : 1.05;
+    }
+
+    function adjustZoom(delta) {
+        cam.targetZoom = Math.max(0.55, Math.min(1.85, cam.targetZoom + delta));
+    }
+
+    function clampCamera() {
+        cam.targetX = Math.max(-560, Math.min(560, cam.targetX));
+        cam.targetY = Math.max(40, Math.min(620, cam.targetY));
+        cam.targetZoom = Math.max(0.55, Math.min(1.85, cam.targetZoom));
+    }
+
+    // Isometric grid -> world pixel coordinates (center of top diamond)
+    function gridToWorld(gx, gy) {
+        return {
+            x: (gx - gy) * (TILE_W / 2),
+            y: (gx + gy) * (TILE_H / 2)
+        };
+    }
+
+    // Screen pixel -> world pixel
+    function screenToWorld(sx, sy) {
+        return {
+            x: (sx - viewW / 2) / cam.zoom + cam.x,
+            y: (sy - viewH / 2) / cam.zoom + cam.y
+        };
+    }
+
+    // World pixel -> isometric grid tile
+    function worldToGrid(wx, wy) {
+        const halfW = TILE_W / 2;
+        const halfH = TILE_H / 2;
+        // Shift wy by halfH because gridToWorld returns the center of the diamond
+        const adjY = wy + halfH;
+        const gx = Math.floor((wx / halfW + adjY / halfH) / 2);
+        const gy = Math.floor((adjY / halfH - wx / halfW) / 2);
+        return { gx, gy };
+    }
+
+    // Smart tile picking: checks exact diamond first, then slightly below for tall trees/buildings/animals
+    function pickTile(sx, sy) {
+        const w1 = screenToWorld(sx, sy);
+        const g1 = worldToGrid(w1.x, w1.y);
+        const inBounds = (g) => g.gx >= 0 && g.gx < GRID_SIZE && g.gy >= 0 && g.gy < GRID_SIZE;
+
+        if (currentMode === 'hand') {
+            // Check slightly below tap point first if that tile holds a tall entity (tree/machine/animal)
+            const wTall = screenToWorld(sx, sy + 20 * cam.zoom);
+            const gTall = worldToGrid(wTall.x, wTall.y);
+            if (inBounds(gTall)) {
+                const tTall = state.grid[gTall.gy][gTall.gx];
+                if (tTall.type === 'tree' || tTall.type === 'machine' || tTall.type === 'animal') {
+                    return gTall;
+                }
+            }
+        }
+        return inBounds(g1) ? g1 : null;
+    }
+
+    // Pointer & Multi-touch Pinch-Zoom Handling
+    const activePointers = new Map();
+    let dragStart = null;
+    let isDragging = false;
+    let lastPinchDist = null;
+
+    canvas.addEventListener('pointerdown', (e) => {
+        Sound.unlock();
+        canvas.setPointerCapture(e.pointerId);
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (activePointers.size === 1) {
+            dragStart = { x: e.clientX, y: e.clientY, camX: cam.targetX, camY: cam.targetY };
+            isDragging = false;
+        } else if (activePointers.size === 2) {
+            const pts = Array.from(activePointers.values());
+            lastPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            isDragging = true;
+        }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+        if (activePointers.has(e.pointerId)) {
+            activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        }
+
+        if (activePointers.size === 2) {
+            const pts = Array.from(activePointers.values());
+            const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            if (lastPinchDist) {
+                const factor = dist / lastPinchDist;
+                cam.targetZoom = Math.max(0.55, Math.min(1.85, cam.targetZoom * factor));
+            }
+            lastPinchDist = dist;
+            return;
+        }
+
+        if (activePointers.size === 1 && dragStart) {
+            const dx = e.clientX - dragStart.x;
+            const dy = e.clientY - dragStart.y;
+            if (Math.hypot(dx, dy) > 8) {
+                isDragging = true;
+                closeInspect();
+            }
+            if (isDragging) {
+                cam.targetX = dragStart.camX - dx / cam.zoom;
+                cam.targetY = dragStart.camY - dy / cam.zoom;
+                clampCamera();
+            }
+        } else {
+            // Desktop hover preview
+            hoveredTile = pickTile(e.clientX, e.clientY);
+        }
+    });
+
+    function onPointerUp(e) {
+        const wasSingleTap = activePointers.size === 1 && !isDragging && dragStart;
+        activePointers.delete(e.pointerId);
+        if (activePointers.size < 2) lastPinchDist = null;
+
+        if (wasSingleTap) {
+            const hit = pickTile(e.clientX, e.clientY);
+            if (hit) {
+                handleTileTap(hit.gx, hit.gy, e.clientX, e.clientY);
+            } else {
+                closeInspect();
+            }
+        }
+        if (activePointers.size === 0) {
+            dragStart = null;
+            isDragging = false;
+        }
+    }
+
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
+
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.12 : -0.12;
+        adjustZoom(delta);
+    }, { passive: false });
+
+    /* ============================================================================
+       7. GAMEPLAY ACTIONS & TILE INTERACTION
+       ============================================================================ */
+    function setMode(mode) {
+        currentMode = mode;
+        closeInspect();
+        if (mode !== 'plant') {
+            document.getElementById('seed-drawer').classList.add('hidden');
+        }
+        if (mode !== 'build') {
+            selectedBuild = null;
+        }
+
+        // Update toolbar highlight
+        ['hand', 'plow', 'plant', 'shop', 'market'].forEach(id => {
+            const btn = document.getElementById(`tool-${id}`);
+            if (btn) btn.classList.remove('active');
+        });
+        const mapId = mode === 'build' ? 'shop' : mode;
+        const activeBtn = document.getElementById(`tool-${mapId}`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // Active mode banner
+        const banner = document.getElementById('mode-banner');
+        const bannerText = document.getElementById('mode-banner-text');
+        if (mode === 'plow') {
+            bannerText.textContent = `⛏️ Tap empty grass to Plow (${PLOW_COST} 🪙, 1 ⚡)`;
+            banner.classList.remove('hidden');
+        } else if (mode === 'plant') {
+            const c = CROPS[selectedSeed];
+            bannerText.textContent = `🌱 Planting ${c.icon} ${c.name} (${c.cost} 🪙) — Tap plots`;
+            banner.classList.remove('hidden');
+        } else if (mode === 'build' && selectedBuild) {
+            const def = getBuildDef(selectedBuild.category, selectedBuild.id);
+            bannerText.textContent = `🏡 Placing ${def.icon} ${def.name} (${def.cost} 🪙) — Tap grass`;
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+        }
+    }
+
+    function getBuildDef(cat, id) {
+        if (cat === 'animals') return ANIMALS[id];
+        if (cat === 'trees') return TREES[id];
+        if (cat === 'machines') return MACHINES[id];
+        if (cat === 'decors') return DECORS[id];
+        return null;
+    }
+
+    function toggleSeedDrawer() {
+        const drawer = document.getElementById('seed-drawer');
+        if (!drawer.classList.contains('hidden')) {
+            closeSeedDrawer();
+            return;
+        }
+        renderSeedDrawer();
+        drawer.classList.remove('hidden');
+        setMode('plant');
+    }
+
+    function closeSeedDrawer() {
+        document.getElementById('seed-drawer').classList.add('hidden');
+        if (currentMode === 'plant') setMode('hand');
+    }
+
+    function renderSeedDrawer() {
+        const list = document.getElementById('seed-list');
+        list.innerHTML = '';
+        Object.values(CROPS).forEach(crop => {
+            const locked = state.level < crop.lvl;
+            const selected = selectedSeed === crop.id;
+            const btn = document.createElement('button');
+            btn.className = `shrink-0 w-24 rounded-2xl p-2 flex flex-col items-center border-2 transition-all ${
+                locked
+                    ? 'bg-stone-200/80 border-stone-400 opacity-65 cursor-not-allowed'
+                    : selected
+                    ? 'bg-gradient-to-b from-lime-200 to-green-300 border-green-700 scale-[1.03] shadow-md'
+                    : 'bg-amber-50 border-amber-800/30 hover:border-amber-700'
+            }`;
+            btn.onclick = () => {
+                if (locked) {
+                    Sound.playError();
+                    showToast(`Unlocks at Level ${crop.lvl}!`, 'error');
+                    return;
+                }
+                selectedSeed = crop.id;
+                Sound.playPlant();
+                renderSeedDrawer();
+                setMode('plant');
+            };
+            btn.innerHTML = `
+                <div class="text-2xl leading-none mb-1">${locked ? '🔒' : crop.icon}</div>
+                <div class="font-bold text-xs text-[#4a250b] truncate w-full">${crop.name}</div>
+                <div class="text-[10px] font-semibold text-amber-800">${locked ? `Lvl ${crop.lvl}` : `⏱ ${crop.time}s`}</div>
+                <div class="mt-1 px-2 py-0.5 rounded-full bg-amber-200/90 text-[10px] font-bold text-[#613400]">🪙 ${crop.cost}</div>
+            `;
+            list.appendChild(btn);
+        });
+    }
+
+    function handleTileTap(gx, gy, screenX, screenY) {
+        const tile = state.grid[gy][gx];
+        const worldPos = gridToWorld(gx, gy);
+        const now = Date.now();
+
+        // --- PLOW MODE ---
+        if (currentMode === 'plow') {
+            if (tile.type !== 'grass') {
+                Sound.playError();
+                showToast('Tap an empty grass tile to plow!', 'error');
+                return;
+            }
+            if (state.coins < PLOW_COST) {
+                Sound.playError();
+                showToast(`Need ${PLOW_COST} coins to plow!`, 'error');
+                return;
+            }
+            if (!spendEnergy(1)) return;
+            state.coins -= PLOW_COST;
+            state.grid[gy][gx] = { type: 'plot', crop: null };
+            state.stats.plowed++;
+            Sound.playPlow();
+            spawnBurst(worldPos.x, worldPos.y, '#8d5524', 10);
+            addXp(4, worldPos.x, worldPos.y);
+            recordQuestProgress('plow', 1);
+            saveState();
+            return;
+        }
+
+        // --- PLANT MODE ---
+        if (currentMode === 'plant') {
+            if (tile.type !== 'plot') {
+                if (tile.type === 'grass') {
+                    showToast('Plow this grass tile first! ⛏️');
+                } else {
+                    showToast('Select an empty plowed soil plot!');
+                }
+                Sound.playError();
+                return;
+            }
+            if (tile.crop) {
+                // Allow harvesting directly if ripe!
+                if (now >= tile.readyAt) {
+                    harvestPlot(gx, gy);
+                } else {
+                    openInspect(gx, gy);
+                }
+                return;
+            }
+            const cropDef = CROPS[selectedSeed];
+            if (state.level < cropDef.lvl) {
+                Sound.playError();
+                showToast(`Unlocks at Level ${cropDef.lvl}!`, 'error');
+                return;
+            }
+            // Anti-softlock: Wheat is free if player has <10 coins and empty barn
+            let cost = cropDef.cost;
+            if (cropDef.id === 'wheat' && state.coins < cost && Object.values(state.inventory).every(v => !v)) {
+                cost = 0;
+                showToast("Uncle's Free Emergency Wheat! 🌾", 'success');
+            }
+            if (state.coins < cost) {
+                Sound.playError();
+                showToast(`Need ${cost} 🪙 to plant ${cropDef.name}!`, 'error');
+                return;
+            }
+            if (!spendEnergy(1)) return;
+            state.coins -= cost;
+            tile.crop = cropDef.id;
+            tile.plantedAt = now;
+            tile.readyAt = now + cropDef.time * 1000;
+            Sound.playPlant();
+            spawnBurst(worldPos.x, worldPos.y, '#74c644', 8);
+            spawnPopup(`-${cost} 🪙`, worldPos.x, worldPos.y - 10, '#fca5a5');
+            if (cropDef.id === 'corn') recordQuestProgress('plant_corn', 1);
+            updateHUD();
+            saveState();
+            return;
+        }
+
+        // --- BUILD PLACEMENT MODE ---
+        if (currentMode === 'build' && selectedBuild) {
+            if (tile.type !== 'grass') {
+                Sound.playError();
+                showToast('Place on an empty green grass tile!', 'error');
+                return;
+            }
+            const def = getBuildDef(selectedBuild.category, selectedBuild.id);
+            if (!def) return;
+            if (state.coins < def.cost) {
+                Sound.playError();
+                showToast(`Need ${def.cost} 🪙 to buy ${def.name}!`, 'error');
+                return;
+            }
+            state.coins -= def.cost;
+            if (selectedBuild.category === 'animals') {
+                state.grid[gy][gx] = { type: 'animal', id: def.id, status: 'producing', startedAt: now, readyAt: now + def.time * 1000 };
+                if (def.id === 'cow') recordQuestProgress('buy_cow', 1);
+            } else if (selectedBuild.category === 'trees') {
+                state.grid[gy][gx] = { type: 'tree', id: def.id, startedAt: now, readyAt: now + def.time * 1000 };
+            } else if (selectedBuild.category === 'machines') {
+                state.grid[gy][gx] = { type: 'machine', id: def.id, recipe: null, startedAt: 0, readyAt: 0 };
+            } else if (selectedBuild.category === 'decors') {
+                state.grid[gy][gx] = { type: 'decor', id: def.id };
+            }
+            Sound.playBuild();
+            spawnBurst(worldPos.x, worldPos.y, '#ffd43b', 16);
+            addXp(def.xp, worldPos.x, worldPos.y);
+            showToast(`Placed ${def.icon} ${def.name}!`, 'success');
+            setMode('hand');
+            saveState();
+            return;
+        }
+
+        // --- HAND / INTERACT MODE ---
+        if (tile.type === 'plot') {
+            if (!tile.crop) {
+                // Quick convenience: open seed drawer when tapping empty plot!
+                toggleSeedDrawer();
+                return;
+            }
+            if (now >= tile.readyAt) {
+                harvestPlot(gx, gy);
+            } else {
+                openInspect(gx, gy);
+            }
+            return;
+        }
+
+        if (tile.type === 'animal') {
+            const def = ANIMALS[tile.id];
+            if (tile.status === 'ready' || (tile.status === 'producing' && now >= tile.readyAt)) {
+                // Collect Animal Product!
+                if (!spendEnergy(1)) return;
+                addInventory(def.product, 1);
+                const prod = GOODS[def.product];
+                Sound.playHarvest();
+                Sound.playCoin();
+                spawnBurst(worldPos.x, worldPos.y - 16, '#ffd43b', 14);
+                spawnPopup(`+1 ${prod.icon}`, worldPos.x, worldPos.y - 34, '#ffffff');
+                addXp(def.xp, worldPos.x, worldPos.y - 14);
+                if (def.product === 'egg') recordQuestProgress('collect_egg', 1);
+                // Transition animal to hungry state!
+                tile.status = 'hungry';
+                tile.startedAt = 0;
+                tile.readyAt = 0;
+                saveState();
+            } else if (tile.status === 'hungry') {
+                // Feed 1 Wheat for fast production, OR graze freely!
+                if ((state.inventory.wheat || 0) >= 1) {
+                    state.inventory.wheat--;
+                    tile.status = 'producing';
+                    tile.startedAt = now;
+                    tile.readyAt = now + Math.round(def.time * 0.6) * 1000;
+                    Sound.playFeed();
+                    spawnBurst(worldPos.x, worldPos.y - 12, '#fde047', 10);
+                    spawnPopup('Fed 🌾 (Fast!)', worldPos.x, worldPos.y - 26, '#bef264');
+                } else {
+                    tile.status = 'producing';
+                    tile.startedAt = now;
+                    tile.readyAt = now + def.time * 1000;
+                    Sound.playFeed();
+                    spawnPopup('Grazing 🌱', worldPos.x, worldPos.y - 26, '#86efac');
+                }
+                saveState();
+            } else {
+                openInspect(gx, gy);
+            }
+            return;
+        }
+
+        if (tile.type === 'tree') {
+            const def = TREES[tile.id];
+            if (now >= tile.readyAt) {
+                if (!spendEnergy(1)) return;
+                addInventory(def.product, 2);
+                const prod = GOODS[def.product];
+                Sound.playHarvest();
+                spawnBurst(worldPos.x, worldPos.y - 28, '#ff6b6b', 14);
+                spawnPopup(`+2 ${prod.icon}`, worldPos.x, worldPos.y - 40, '#ffffff');
+                addXp(def.xp, worldPos.x, worldPos.y - 20);
+                tile.startedAt = now;
+                tile.readyAt = now + def.time * 1000;
+                saveState();
+            } else {
+                openInspect(gx, gy);
+            }
+            return;
+        }
+
+        if (tile.type === 'machine') {
+            const def = MACHINES[tile.id];
+            if (tile.recipe && now >= tile.readyAt) {
+                // Collect crafted good!
+                const rec = def.recipes.find(r => r.id === tile.recipe);
+                if (rec) {
+                    addInventory(rec.id, 1);
+                    state.stats.crafted++;
+                    Sound.playHarvest();
+                    Sound.playCoin();
+                    spawnBurst(worldPos.x, worldPos.y - 24, '#ffd43b', 18);
+                    spawnPopup(`+1 ${rec.icon}`, worldPos.x, worldPos.y - 42, '#fde047');
+                    addXp(rec.xp, worldPos.x, worldPos.y - 22);
+                    if (rec.id === 'bread') recordQuestProgress('craft_bread', 1);
+                    if (rec.id === 'cheese') recordQuestProgress('craft_cheese', 1);
+                }
+                tile.recipe = null;
+                tile.startedAt = 0;
+                tile.readyAt = 0;
+                saveState();
+            } else {
+                openMachineModal(gx, gy);
+            }
+            return;
+        }
+
+        if (tile.type === 'decor') {
+            const def = DECORS[tile.id];
+            Sound.playPlant();
+            spawnBurst(worldPos.x, worldPos.y - 10, '#f472b6', 8);
+            showToast(`${def.icon} ${def.name} — Looking lovely!`);
+        }
+    }
+
+    function harvestPlot(gx, gy) {
+        const tile = state.grid[gy][gx];
+        const cropDef = CROPS[tile.crop];
+        if (!cropDef) return;
+        if (!spendEnergy(1)) return;
+
+        const worldPos = gridToWorld(gx, gy);
+        addInventory(cropDef.id, 1);
+        // Immediate small coin bonus + crop stored in barn!
+        const harvestBonus = Math.round(cropDef.sell * 0.45);
+        addCoins(harvestBonus, worldPos.x, worldPos.y - 12);
+        addXp(cropDef.xp, worldPos.x, worldPos.y - 14);
+        spawnPopup(`+1 ${cropDef.icon}`, worldPos.x, worldPos.y - 38, '#ffffff');
+        spawnBurst(worldPos.x, worldPos.y - 8, '#ffd43b', 16);
+        Sound.playHarvest();
+        Sound.playCoin();
+
+        state.stats.harvested++;
+        if (cropDef.id === 'wheat') recordQuestProgress('harvest_wheat', 1);
+        recordQuestProgress('harvest_any', 1);
+
+        tile.crop = null;
+        tile.plantedAt = 0;
+        tile.readyAt = 0;
+        saveState();
+    }
+
+    /* ============================================================================
+       8. CIRCULAR PROGRESS INSPECT POPUP
+       ============================================================================ */
+    function openInspect(gx, gy) {
+        inspectedTile = { gx, gy };
+        updateInspectPopup();
+        document.getElementById('inspect-popup').classList.remove('hidden');
+    }
+
+    function closeInspect() {
+        inspectedTile = null;
+        document.getElementById('inspect-popup').classList.add('hidden');
+    }
+
+    function updateInspectPopup() {
+        if (!inspectedTile) return;
+        const { gx, gy } = inspectedTile;
+        const tile = state.grid[gy][gx];
+        const now = Date.now();
+        let icon = '🌱', title = '', startedAt = 0, readyAt = 0;
+
+        if (tile.type === 'plot' && tile.crop) {
+            const c = CROPS[tile.crop];
+            icon = c.icon; title = c.name; startedAt = tile.plantedAt; readyAt = tile.readyAt;
+        } else if (tile.type === 'animal' && tile.status === 'producing') {
+            const a = ANIMALS[tile.id];
+            icon = a.icon; title = a.name; startedAt = tile.startedAt; readyAt = tile.readyAt;
+        } else if (tile.type === 'tree') {
+            const t = TREES[tile.id];
+            icon = t.icon; title = t.name; startedAt = tile.startedAt; readyAt = tile.readyAt;
+        } else if (tile.type === 'machine' && tile.recipe) {
+            const m = MACHINES[tile.id];
+            const r = m.recipes.find(x => x.id === tile.recipe);
+            icon = r.icon; title = r.name; startedAt = tile.startedAt; readyAt = tile.readyAt;
+        } else {
+            closeInspect();
+            return;
+        }
+
+        const total = Math.max(1, readyAt - startedAt);
+        const remMs = Math.max(0, readyAt - now);
+        if (remMs <= 0) {
+            closeInspect();
+            return;
+        }
+        const progress = 1 - remMs / total;
+        const circumference = 2 * Math.PI * 34;
+
+        document.getElementById('inspect-icon').textContent = icon;
+        document.getElementById('inspect-title').textContent = title;
+        document.getElementById('inspect-sub').textContent = `Ready in ${Math.ceil(remMs / 1000)}s`;
+        document.getElementById('inspect-ring').style.strokeDashoffset = circumference * (1 - progress);
+    }
+
+    function instantFinishInspected() {
+        if (!inspectedTile) return;
+        if (state.cash < 1) {
+            Sound.playError();
+            showToast('Need 1 💵 Green Cash for Instant Grow!', 'error');
+            return;
+        }
+        const { gx, gy } = inspectedTile;
+        const tile = state.grid[gy][gx];
+        state.cash -= 1;
+        tile.readyAt = Date.now() - 100;
+        if (tile.type === 'animal') tile.status = 'ready';
+        const wp = gridToWorld(gx, gy);
+        Sound.playLevelUp();
+        spawnBurst(wp.x, wp.y - 16, '#4ade80', 18);
+        spawnPopup('⚡ Ready!', wp.x, wp.y - 26, '#86efac');
+        closeInspect();
+        updateHUD();
+        saveState();
+    }
+
+    /* ============================================================================
+       9. MODALS: SHOP, MARKET/BARN, QUESTS, MACHINE, LEVEL-UP, SETTINGS
+       ============================================================================ */
+    function openModal(type, tab = null) {
+        closeInspect();
+        document.getElementById('seed-drawer').classList.add('hidden');
+        activeModal = type;
+        activeModalTab = tab;
+        document.getElementById('modal-backdrop').classList.remove('hidden');
+        renderModal();
+    }
+
+    function closeModal() {
+        activeModal = null;
+        activeModalTab = null;
+        document.getElementById('modal-backdrop').classList.add('hidden');
+    }
+
+    function renderModal() {
+        const titleEl = document.getElementById('modal-title');
+        const tabsEl = document.getElementById('modal-tabs');
+        const bodyEl = document.getElementById('modal-body');
+        tabsEl.classList.add('hidden');
+        tabsEl.innerHTML = '';
+
+        // --- BUILD / SHOP MODAL ---
+        if (activeModal === 'shop') {
+            titleEl.innerHTML = '🏡 Farm Build Shop';
+            const tabs = [
+                { id: 'animals', label: '🐄 Animals' },
+                { id: 'trees', label: '🍎 Trees' },
+                { id: 'machines', label: '🥖 Machines' },
+                { id: 'decors', label: '🌷 Decor' }
+            ];
+            tabsEl.classList.remove('hidden');
+            tabs.forEach(t => {
+                const b = document.createElement('button');
+                b.className = `px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 border-2 ${
+                    activeModalTab === t.id
+                        ? 'bg-[#7d471d] text-amber-50 border-[#4a250b]'
+                        : 'bg-amber-50 text-[#5c300c] border-[#c9a870]'
+                }`;
+                b.textContent = t.label;
+                b.onclick = () => { activeModalTab = t.id; renderModal(); };
+                tabsEl.appendChild(b);
+            });
+
+            const catalog = activeModalTab === 'animals' ? ANIMALS
+                : activeModalTab === 'trees' ? TREES
+                : activeModalTab === 'machines' ? MACHINES : DECORS;
+
+            bodyEl.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${Object.values(catalog).map(item => {
+                    const locked = state.level < item.lvl;
+                    const canAfford = state.coins >= item.cost;
+                    return `
+                    <div class="bg-white/85 border-2 border-[#d4b483] rounded-2xl p-3 flex items-center justify-between gap-2 shadow-sm ${locked ? 'opacity-65' : ''}">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-2xl shrink-0">${locked ? '🔒' : item.icon}</div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-sm text-[#4a250b] truncate">${item.name}</div>
+                                <div class="text-[11px] text-amber-900/80 leading-tight">${item.desc}</div>
+                                <div class="text-[11px] font-bold text-emerald-700 mt-0.5">+${item.xp} XP ${item.time ? `• ⏱${item.time}s` : ''}</div>
+                            </div>
+                        </div>
+                        <button onclick="startPlacing('${activeModalTab}', '${item.id}')" class="game-btn ${locked ? 'bg-stone-400 border-stone-600 text-white' : canAfford ? 'btn-green' : 'btn-amber'} px-3 py-2 rounded-xl text-xs font-bold shrink-0">
+                            ${locked ? `Lvl ${item.lvl}` : `🪙 ${item.cost}`}
+                        </button>
+                    </div>`;
+                }).join('')}
+            </div>`;
+            return;
+        }
+
+        // --- MARKET & BARN STORAGE MODAL ---
+        if (activeModal === 'market') {
+            titleEl.innerHTML = '🏪 Farm Market & Barn';
+            const tabs = [
+                { id: 'orders', label: '📋 Order Board' },
+                { id: 'barn', label: '🧺 Barn Storage' }
+            ];
+            tabsEl.classList.remove('hidden');
+            tabs.forEach(t => {
+                const b = document.createElement('button');
+                b.className = `px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 border-2 ${
+                    activeModalTab === t.id
+                        ? 'bg-[#7d471d] text-amber-50 border-[#4a250b]'
+                        : 'bg-amber-50 text-[#5c300c] border-[#c9a870]'
+                }`;
+                b.textContent = t.label;
+                b.onclick = () => { activeModalTab = t.id; renderModal(); };
+                tabsEl.appendChild(b);
+            });
+
+            if (activeModalTab === 'orders') {
+                bodyEl.innerHTML = `
+                    <p class="text-xs font-semibold text-amber-900/80 mb-3">Fulfill village orders for <span class="text-emerald-700 font-bold">+32% bonus Coins & XP</span>!</p>
+                    <div class="flex flex-col gap-2.5">
+                        ${state.orders.map((ord, idx) => {
+                            const canFulfill = Object.entries(ord.reqs).every(([gid, qty]) => (state.inventory[gid] || 0) >= qty);
+                            return `
+                            <div class="bg-white/90 border-2 ${canFulfill ? 'border-emerald-500' : 'border-[#d4b483]'} rounded-2xl p-3 shadow-sm">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2 font-bold text-sm text-[#4a250b]">
+                                        <span class="text-xl">${ord.avatar}</span> ${ord.customer}
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs font-bold">
+                                        <span class="bg-amber-100 px-2 py-0.5 rounded-full text-amber-800">🪙 ${ord.rewardCoins}</span>
+                                        <span class="bg-sky-100 px-2 py-0.5 rounded-full text-sky-800">⭐ ${ord.rewardXp}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex flex-wrap gap-1.5">
+                                        ${Object.entries(ord.reqs).map(([gid, qty]) => {
+                                            const have = state.inventory[gid] || 0;
+                                            const ok = have >= qty;
+                                            const g = GOODS[gid];
+                                            return `<span class="px-2 py-1 rounded-xl text-xs font-bold border ${ok ? 'bg-emerald-50 border-emerald-400 text-emerald-800' : 'bg-red-50 border-red-300 text-red-700'}">
+                                                ${g.icon} ${g.name} ${have}/${qty}
+                                            </span>`;
+                                        }).join('')}
+                                    </div>
+                                    <div class="flex gap-1.5 shrink-0">
+                                        <button onclick="trashOrder(${idx})" class="game-btn bg-stone-200 border-2 border-stone-400 text-stone-700 px-2 py-1.5 rounded-xl text-xs font-bold" title="New Order">🔄</button>
+                                        <button onclick="fulfillOrder(${idx})" class="game-btn ${canFulfill ? 'btn-green' : 'bg-stone-300 border-stone-400 text-stone-500'} px-3 py-1.5 rounded-xl text-xs font-bold">
+                                            Deliver
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                `;
+            } else {
+                // Barn Storage
+                const items = Object.entries(state.inventory).filter(([, qty]) => qty > 0);
+                if (items.length === 0) {
+                    bodyEl.innerHTML = `<div class="text-center py-8 text-amber-900/70 font-semibold">
+                        <div class="text-4xl mb-2">🧺</div>
+                        Your Barn is currently empty!<br>Harvest crops, collect eggs, or bake bread to stock up.
+                    </div>`;
+                } else {
+                    bodyEl.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${items.map(([gid, qty]) => {
+                            const g = GOODS[gid];
+                            if (!g) return '';
+                            return `
+                            <div class="bg-white/90 border-2 border-[#d4b483] rounded-2xl p-2.5 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl">${g.icon}</span>
+                                    <div>
+                                        <div class="font-bold text-sm text-[#4a250b]">${g.name} <span class="text-amber-700">×${qty}</span></div>
+                                        <div class="text-[11px] font-semibold text-amber-800">Value: 🪙 ${g.sell} each</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="sellGood('${gid}', 1)" class="game-btn btn-amber px-2.5 py-1.5 rounded-xl text-xs font-bold">Sell 1</button>
+                                    ${qty > 1 ? `<button onclick="sellGood('${gid}', ${qty})" class="game-btn btn-green px-2.5 py-1.5 rounded-xl text-xs font-bold">All</button>` : ''}
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>`;
+                }
+            }
+            return;
+        }
+
+        // --- QUESTS / FARMER UNCLE MODAL ---
+        if (activeModal === 'quests') {
+            titleEl.innerHTML = '📜 Farmer Uncle’s Quests';
+            const q = getCurrentQuest();
+            if (!q) {
+                bodyEl.innerHTML = `
+                    <div class="text-center py-6">
+                        <div class="text-5xl mb-3">🏆</div>
+                        <h3 class="font-bold text-xl text-[#4a250b] mb-1">All Quests Completed!</h3>
+                        <p class="text-sm text-amber-900">You are a true Green Farm Legend! Keep expanding your dream farm and filling village orders.</p>
+                    </div>`;
+                return;
+            }
+            const cur = q.type === 'reach_level' ? state.level : (state.questProgress[q.id] || 0);
+            const pct = Math.min(100, Math.round((cur / q.target) * 100));
+            const done = cur >= q.target;
+
+            bodyEl.innerHTML = `
+                <div class="flex items-start gap-3 bg-amber-100/80 border-2 border-[#cfa96e] rounded-2xl p-3 mb-3">
+                    <!-- Custom Illustrated Farmer Uncle Portrait SVG -->
+                    <svg viewBox="0 0 64 64" class="w-16 h-16 shrink-0 rounded-2xl bg-sky-200 border-2 border-[#7d471d] shadow">
+                        <rect width="64" height="64" fill="#93c5fd"/>
+                        <path d="M12 64 Q32 46 52 64 Z" fill="#dc2626"/>
+                        <path d="M22 64 L22 50 L42 50 L42 64 Z" fill="#2563eb"/>
+                        <circle cx="32" cy="34" r="14" fill="#fed7aa"/>
+                        <path d="M18 36 Q32 49 46 36 Q42 50 32 50 Q22 50 18 36 Z" fill="#f3f4f6"/>
+                        <circle cx="27" cy="32" r="2" fill="#1f2937"/>
+                        <circle cx="37" cy="32" r="2" fill="#1f2937"/>
+                        <path d="M27 38 Q32 42 37 38" stroke="#92400e" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        <ellipse cx="32" cy="21" rx="22" ry="5" fill="#eab308" stroke="#a16207" stroke-width="1.5"/>
+                        <path d="M18 21 Q22 8 32 9 Q42 8 46 21 Z" fill="#facc15" stroke="#a16207" stroke-width="1.5"/>
+                        <rect x="20" y="17" width="24" height="3" fill="#dc2626"/>
+                    </svg>
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-amber-800">Uncle Barnaby says:</div>
+                        <p class="text-sm font-medium text-[#4a250b] italic leading-snug mt-0.5">"${q.uncle}"</p>
+                    </div>
+                </div>
+
+                <div class="bg-white/90 border-2 border-[#d4b483] rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold text-amber-700">Quest ${state.questIndex + 1} of ${QUESTS.length}</span>
+                        <span class="text-xs font-bold text-emerald-700">${Math.min(cur, q.target)} / ${q.target}</span>
+                    </div>
+                    <h3 class="font-bold text-lg text-[#4a250b]">${q.title}</h3>
+                    <p class="text-sm text-amber-900/90 mb-3">${q.desc}</p>
+                    <div class="w-full h-3 bg-amber-950/15 rounded-full overflow-hidden border border-amber-800/20 mb-3">
+                        <div class="h-full bg-gradient-to-r from-lime-500 to-emerald-500 transition-all duration-300" style="width:${pct}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2 text-xs font-bold">
+                            <span class="bg-amber-100 px-2.5 py-1 rounded-full text-amber-900">🪙 ${q.coins}</span>
+                            <span class="bg-sky-100 px-2.5 py-1 rounded-full text-sky-900">⭐ ${q.xp}</span>
+                            <span class="bg-emerald-100 px-2.5 py-1 rounded-full text-emerald-900">💵 ${q.cash}</span>
+                        </div>
+                        ${done
+                            ? `<button onclick="claimQuestReward()" class="game-btn btn-green px-5 py-2 rounded-xl font-bold text-sm badge-pulse">🎁 Claim Reward!</button>`
+                            : `<button onclick="closeModal()" class="game-btn btn-amber px-4 py-2 rounded-xl font-bold text-sm">Let’s Go!</button>`
+                        }
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // --- SETTINGS MODAL ---
+        if (activeModal === 'settings') {
+            titleEl.innerHTML = '⚙️ Farm Settings';
+            bodyEl.innerHTML = `
+                <div class="flex flex-col gap-3">
+                    <div class="bg-white/90 border-2 border-[#d4b483] rounded-2xl p-3 flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-sm text-[#4a250b]">Sound Effects</div>
+                            <div class="text-xs text-amber-800">Synthesized cozy farm audio</div>
+                        </div>
+                        <button onclick="toggleMute(); renderModal();" class="game-btn ${Sound.muted ? 'btn-red' : 'btn-green'} px-4 py-2 rounded-xl text-xs font-bold">
+                            ${Sound.muted ? '🔇 Muted' : '🔊 On'}
+                        </button>
+                    </div>
+                    <div class="bg-white/90 border-2 border-[#d4b483] rounded-2xl p-3">
+                        <div class="font-bold text-sm text-[#4a250b] mb-2">📊 Your Farm Stats</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-amber-900">
+                            <div class="bg-amber-50 p-2 rounded-xl">🌾 Crops Harvested: <b>${state.stats.harvested}</b></div>
+                            <div class="bg-amber-50 p-2 rounded-xl">⛏️ Plots Plowed: <b>${state.stats.plowed}</b></div>
+                            <div class="bg-amber-50 p-2 rounded-xl">🥖 Goods Crafted: <b>${state.stats.crafted}</b></div>
+                            <div class="bg-amber-50 p-2 rounded-xl">📋 Orders Filled: <b>${state.stats.ordersFulfilled}</b></div>
+                        </div>
+                    </div>
+                    <div id="reset-zone" class="bg-red-50 border-2 border-red-300 rounded-2xl p-3 flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-sm text-red-800">Reset Farm</div>
+                            <div class="text-xs text-red-700/80">Start a fresh new farm from Level 1</div>
+                        </div>
+                        <button onclick="showResetConfirm()" class="game-btn btn-red px-4 py-2 rounded-xl text-xs font-bold">Reset</button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function showResetConfirm() {
+        const zone = document.getElementById('reset-zone');
+        if (!zone) return;
+        zone.innerHTML = `
+            <div class="w-full flex flex-col gap-2">
+                <div class="font-bold text-xs text-red-900">Are you sure? All current progress will be cleared!</div>
+                <div class="flex gap-2 justify-end">
+                    <button onclick="renderModal()" class="game-btn bg-stone-200 border-2 border-stone-400 text-stone-800 px-3 py-1.5 rounded-xl text-xs font-bold">Cancel</button>
+                    <button onclick="confirmResetFarm()" class="game-btn btn-red px-4 py-1.5 rounded-xl text-xs font-bold">Yes, Reset Farm</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function confirmResetFarm() {
+        localStorage.removeItem(SAVE_KEY);
+        state = createStarterState();
+        saveState();
+        updateHUD();
+        centerCamera();
+        closeModal();
+        showToast('🌱 Welcome to your fresh new Green Farm!', 'success');
+    }
+
+    function startPlacing(category, id) {
+        const def = getBuildDef(category, id);
+        if (!def) return;
+        if (state.level < def.lvl) {
+            Sound.playError();
+            showToast(`Unlocks at Level ${def.lvl}!`, 'error');
+            return;
+        }
+        if (state.coins < def.cost) {
+            Sound.playError();
+            showToast(`Need ${def.cost} 🪙 to buy ${def.name}!`, 'error');
+            return;
+        }
+        selectedBuild = { category, id };
+        closeModal();
+        setMode('build');
+        showToast(`Tap any empty green tile to place ${def.icon} ${def.name}!`);
+    }
+
+    function sellGood(gid, qty) {
+        const have = state.inventory[gid] || 0;
+        const sellQty = Math.min(have, qty);
+        if (sellQty <= 0) return;
+        const g = GOODS[gid];
+        state.inventory[gid] -= sellQty;
+        const earned = g.sell * sellQty;
+        state.coins += earned;
+        Sound.playCoin();
+        showToast(`Sold ${sellQty}× ${g.icon} ${g.name} for 🪙 ${earned}!`, 'success');
+        updateHUD();
+        saveState();
+        renderModal();
+    }
+
+    function fulfillOrder(idx) {
+        const ord = state.orders[idx];
+        if (!ord) return;
+        const ok = Object.entries(ord.reqs).every(([gid, qty]) => (state.inventory[gid] || 0) >= qty);
+        if (!ok) {
+            Sound.playError();
+            showToast('You need more goods in your Barn for this order!', 'error');
+            return;
+        }
+        Object.entries(ord.reqs).forEach(([gid, qty]) => {
+            state.inventory[gid] -= qty;
+        });
+        state.coins += ord.rewardCoins;
+        state.stats.ordersFulfilled++;
+        Sound.playLevelUp();
+        showToast(`Delivered to ${ord.customer}! +${ord.rewardCoins} 🪙, +${ord.rewardXp} ⭐`, 'success');
+        recordQuestProgress('order', 1);
+        state.orders[idx] = generateOrder(state.level);
+        addXp(ord.rewardXp);
+        saveState();
+        if (activeModal === 'market') renderModal();
+    }
+
+    function trashOrder(idx) {
+        state.orders[idx] = generateOrder(state.level);
+        Sound.playPlant();
+        saveState();
+        renderModal();
+    }
+
+    function claimQuestReward() {
+        const q = getCurrentQuest();
+        if (!q || !isQuestReadyToClaim()) return;
+        state.coins += q.coins;
+        state.cash += q.cash;
+        state.questIndex++;
+        Sound.playLevelUp();
+        showToast(`🎁 Claimed +${q.coins} 🪙, +${q.cash} 💵, +${q.xp} ⭐!`, 'success');
+        addXp(q.xp);
+        // Check if next quest is already satisfied (e.g. reach_level)
+        updateQuestBadge();
+        saveState();
+        if (activeModal === 'quests') renderModal();
+    }
+
+    function openMachineModal(gx, gy) {
+        const tile = state.grid[gy][gx];
+        const def = MACHINES[tile.id];
+        if (!def) return;
+        activeModal = 'machine';
+        document.getElementById('modal-backdrop').classList.remove('hidden');
+        document.getElementById('modal-tabs').classList.add('hidden');
+        document.getElementById('modal-title').innerHTML = `${def.icon} ${def.name}`;
+
+        const now = Date.now();
+        const bodyEl = document.getElementById('modal-body');
+
+        if (tile.recipe && now < tile.readyAt) {
+            const rec = def.recipes.find(r => r.id === tile.recipe);
+            const rem = Math.ceil((tile.readyAt - now) / 1000);
+            bodyEl.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="text-5xl mb-2 animate-bounce">${rec.icon}</div>
+                    <h3 class="font-bold text-lg text-[#4a250b]">Crafting ${rec.name}...</h3>
+                    <p class="text-sm font-semibold text-amber-800 mb-4">Ready in about ${rem} seconds!</p>
+                    <button onclick="instantFinishMachine(${gx}, ${gy})" class="game-btn btn-green px-6 py-2.5 rounded-2xl font-bold text-sm">
+                        ⚡ Finish Now (1 💵)
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        bodyEl.innerHTML = `
+            <p class="text-xs font-semibold text-amber-900/80 mb-3">Choose a recipe to craft delicious farm goods:</p>
+            <div class="flex flex-col gap-2.5">
+                ${def.recipes.map(rec => {
+                    const canCraft = Object.entries(rec.inputs).every(([gid, qty]) => (state.inventory[gid] || 0) >= qty);
+                    return `
+                    <div class="bg-white/90 border-2 ${canCraft ? 'border-emerald-500' : 'border-[#d4b483]'} rounded-2xl p-3 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-2xl">${rec.icon}</div>
+                            <div>
+                                <div class="font-bold text-sm text-[#4a250b]">${rec.name}</div>
+                                <div class="flex flex-wrap gap-1 my-1">
+                                    ${Object.entries(rec.inputs).map(([gid, qty]) => {
+                                        const have = state.inventory[gid] || 0;
+                                        const ok = have >= qty;
+                                        const g = GOODS[gid];
+                                        return `<span class="text-[11px] font-bold px-1.5 py-0.5 rounded-lg ${ok ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}">${g.icon} ${have}/${qty}</span>`;
+                                    }).join('')}
+                                </div>
+                                <div class="text-[11px] font-semibold text-amber-800">⏱ ${rec.time}s • Sells 🪙 ${rec.sell} • +${rec.xp} XP</div>
+                            </div>
+                        </div>
+                        <button onclick="startCraft(${gx}, ${gy}, '${rec.id}')" class="game-btn ${canCraft ? 'btn-green' : 'bg-stone-300 border-stone-400 text-stone-500'} px-3.5 py-2 rounded-xl text-xs font-bold shrink-0">
+                            Craft
+                        </button>
+                    </div>`;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    function startCraft(gx, gy, recipeId) {
+        const tile = state.grid[gy][gx];
+        const def = MACHINES[tile.id];
+        const rec = def.recipes.find(r => r.id === recipeId);
+        if (!rec) return;
+        const ok = Object.entries(rec.inputs).every(([gid, qty]) => (state.inventory[gid] || 0) >= qty);
+        if (!ok) {
+            Sound.playError();
+            showToast('Not enough ingredients in your Barn!', 'error');
+            return;
+        }
+        Object.entries(rec.inputs).forEach(([gid, qty]) => {
+            state.inventory[gid] -= qty;
+        });
+        const now = Date.now();
+        tile.recipe = rec.id;
+        tile.startedAt = now;
+        tile.readyAt = now + rec.time * 1000;
+        Sound.playBuild();
+        const wp = gridToWorld(gx, gy);
+        spawnBurst(wp.x, wp.y - 24, '#fbbf24', 10);
+        showToast(`Started crafting ${rec.icon} ${rec.name}!`, 'success');
+        saveState();
+        closeModal();
+    }
+
+    function instantFinishMachine(gx, gy) {
+        if (state.cash < 1) {
+            Sound.playError();
+            showToast('Need 1 💵 Green Cash!', 'error');
+            return;
+        }
+        const tile = state.grid[gy][gx];
+        state.cash -= 1;
+        tile.readyAt = Date.now() - 100;
+        Sound.playLevelUp();
+        updateHUD();
+        saveState();
+        closeModal();
+        showToast('⚡ Crafting Complete! Tap machine to collect!', 'success');
+    }
+
+    function openLevelUpModal(lvl, coins, cash) {
+        activeModal = 'levelup';
+        document.getElementById('modal-backdrop').classList.remove('hidden');
+        document.getElementById('modal-tabs').classList.add('hidden');
+        document.getElementById('modal-title').innerHTML = '⭐ LEVEL UP!';
+
+        const unlocks = [];
+        Object.values(CROPS).forEach(c => { if (c.lvl === lvl) unlocks.push(`${c.icon} ${c.name}`); });
+        Object.values(ANIMALS).forEach(a => { if (a.lvl === lvl) unlocks.push(`${a.icon} ${a.name}`); });
+        Object.values(TREES).forEach(t => { if (t.lvl === lvl) unlocks.push(`${t.icon} ${t.name}`); });
+        Object.values(MACHINES).forEach(m => { if (m.lvl === lvl) unlocks.push(`${m.icon} ${m.name}`); });
+        Object.values(DECORS).forEach(d => { if (d.lvl === lvl) unlocks.push(`${d.icon} ${d.name}`); });
+
+        document.getElementById('modal-body').innerHTML = `
+            <div class="text-center py-2">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-amber-700 text-3xl font-extrabold text-[#5c2c00] shadow-lg mb-2">
+                    ${lvl}
+                </div>
+                <h3 class="font-bold text-xl text-[#4a250b] mb-1">You Reached Level ${lvl}!</h3>
+                <p class="text-xs font-semibold text-amber-900 mb-3">Your Energy has been completely refilled ⚡</p>
+                <div class="flex justify-center gap-2 mb-4">
+                    <span class="bg-amber-100 border border-amber-400 px-3 py-1 rounded-full text-sm font-bold text-amber-900">+${coins} 🪙</span>
+                    <span class="bg-emerald-100 border border-emerald-400 px-3 py-1 rounded-full text-sm font-bold text-emerald-900">+${cash} 💵</span>
+                </div>
+                ${unlocks.length ? `
+                    <div class="bg-white/90 border-2 border-[#d4b483] rounded-2xl p-3 mb-4">
+                        <div class="text-xs font-bold uppercase text-amber-800 mb-1.5">✨ Newly Unlocked</div>
+                        <div class="flex flex-wrap justify-center gap-1.5">
+                            ${unlocks.map(u => `<span class="bg-lime-100 border border-lime-400 px-2.5 py-1 rounded-xl text-xs font-bold text-lime-900">${u}</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                <button onclick="closeModal()" class="game-btn btn-green px-8 py-2.5 rounded-2xl font-bold text-base">Awesome!</button>
+            </div>
+        `;
+    }
+
+    /* ============================================================================
+       10. PARTICLES, FLOATING POPUPS & AMBIENT WORLD EFFECTS
+       ============================================================================ */
+    function spawnBurst(wx, wy, color, count = 12) {
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1.2 + Math.random() * 2.8;
+            particles.push({
+                x: wx, y: wy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2.2,
+                size: 3 + Math.random() * 4,
+                color: i % 3 === 0 ? '#ffffff' : color,
+                life: 1,
+                decay: 0.022 + Math.random() * 0.015,
+                star: i % 2 === 0
+            });
+        }
+    }
+
+    function spawnPopup(text, wx, wy, color = '#ffffff') {
+        popups.push({ text, x: wx, y: wy, color, life: 1 });
+    }
+
+    function initAmbientEffects() {
+        for (let i = 0; i < 6; i++) {
+            clouds.push({
+                x: -700 + i * 260,
+                y: -120 + (i % 3) * 230,
+                scale: 0.8 + (i % 3) * 0.35,
+                speed: 0.12 + (i % 2) * 0.08
+            });
+        }
+        for (let i = 0; i < 3; i++) {
+            pondRipples.push({ phase: i / 3 });
+        }
+    }
+
+    /* ============================================================================
+       11. RICH 2.5D ISOMETRIC CANVAS RENDERER
+       ============================================================================ */
+    // Deterministic hash for subtle tile grass/flower variation
+    function tileHash(x, y) {
+        const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+        return n - Math.floor(n);
+    }
+
+    function drawDiamond(x, y, w, h) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - h / 2);
+        ctx.lineTo(x + w / 2, y);
+        ctx.lineTo(x, y + h / 2);
+        ctx.lineTo(x - w / 2, y);
+        ctx.closePath();
+    }
+
+    // --- NON-GRID CHARMING SCENERY ---
+    function drawBackgroundMeadow() {
+        // Lush sunlit radial meadow backdrop
+        const grad = ctx.createRadialGradient(viewW * 0.5, viewH * 0.42, 40, viewW * 0.5, viewH * 0.5, Math.max(viewW, viewH) * 0.9);
+        grad.addColorStop(0, '#72c242');
+        grad.addColorStop(0.55, '#59aa32');
+        grad.addColorStop(1, '#3f8524');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, viewW, viewH);
+    }
+
+    function drawDirtRoadsAndFarmBase() {
+        // Subtle darker green meadow apron around the 14x14 diamond
+        const top = gridToWorld(-0.6, -0.6);
+        const right = gridToWorld(GRID_SIZE - 0.4, -0.6);
+        const bottom = gridToWorld(GRID_SIZE - 0.4, GRID_SIZE - 0.4);
+        const left = gridToWorld(-0.6, GRID_SIZE - 0.4);
+
+        ctx.save();
+        // Dirt path leading from front gate downwards
+        const gate = gridToWorld(GRID_SIZE - 0.5, GRID_SIZE / 2);
+        ctx.fillStyle = '#c89b63';
+        ctx.beginPath();
+        ctx.moveTo(gate.x - 24, gate.y - 12);
+        ctx.lineTo(gate.x + 24, gate.y + 12);
+        ctx.lineTo(gate.x + 200, gate.y + 100);
+        ctx.lineTo(gate.x + 140, gate.y + 125);
+        ctx.closePath();
+        ctx.fill();
+
+        // Warm gravel border pad under the grid
+        ctx.beginPath();
+        ctx.moveTo(top.x, top.y - TILE_H / 2);
+        ctx.lineTo(right.x + TILE_W / 2, right.y);
+        ctx.lineTo(bottom.x, bottom.y + TILE_H / 2);
+        ctx.lineTo(left.x - TILE_W / 2, left.y);
+        ctx.closePath();
+        ctx.fillStyle = '#4c942b';
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#3f7e22';
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawSparklingPond(t) {
+        // Positioned gracefully on the right outside the grid
+        const p = gridToWorld(10.5, -2.5);
+        ctx.save();
+        ctx.translate(p.x + 60, p.y + 45);
+
+        // Sandy/grassy pond bank
+        ctx.fillStyle = '#b9935a';
+        ctx.beginPath();
+        ctx.ellipse(0, 4, 108, 56, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Deep sparkling water
+        const wGrad = ctx.createRadialGradient(-18, -8, 10, 0, 0, 100);
+        wGrad.addColorStop(0, '#5cd6ff');
+        wGrad.addColorStop(0.6, '#229fd9');
+        wGrad.addColorStop(1, '#1470a8');
+        ctx.fillStyle = wGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 98, 48, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Animated ripples
+        pondRipples.forEach((rip, idx) => {
+            const prog = (rip.phase + t * 0.22) % 1;
+            const rx = -25 + idx * 28;
+            const ry = -6 + (idx % 2) * 14;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - prog) * 0.55})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(rx, ry, 8 + prog * 26, 4 + prog * 13, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        });
+
+        // Lily pads
+        const drawLily = (lx, ly, r) => {
+            ctx.fillStyle = '#2ea043';
+            ctx.beginPath();
+            ctx.ellipse(lx, ly, r, r * 0.55, 0.2, 0.2, Math.PI * 2 - 0.3);
+            ctx.lineTo(lx, ly);
+            ctx.fill();
+            ctx.fillStyle = '#f472b6';
+            ctx.beginPath();
+            ctx.arc(lx + 2, ly - 2, 3, 0, Math.PI * 2);
+            ctx.fill();
+        };
+        drawLily(42, 12, 13);
+        drawLily(-50, 16, 10);
+
+        // Sparkling sun glints
+        for (let i = 0; i < 4; i++) {
+            const alpha = 0.35 + 0.55 * Math.abs(Math.sin(t * 2.5 + i * 1.7));
+            ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+            ctx.beginPath();
+            ctx.arc(-30 + i * 24, -12 + (i % 2) * 18, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawFarmhouse(t) {
+        // Cozy Red-Roofed Farmhouse on top-left outside grid
+        const pos = gridToWorld(-2.4, 2.2);
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath();
+        ctx.ellipse(8, 20, 74, 34, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Left wall (warm cream)
+        ctx.fillStyle = '#f7ebd2';
+        ctx.beginPath();
+        ctx.moveTo(-58, 0); ctx.lineTo(0, 28); ctx.lineTo(0, -28); ctx.lineTo(-58, -56);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#8a5a32'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Right wall (shaded cream)
+        ctx.fillStyle = '#e4cfa8';
+        ctx.beginPath();
+        ctx.moveTo(0, 28); ctx.lineTo(58, 0); ctx.lineTo(58, -56); ctx.lineTo(0, -28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Wooden door on right wall
+        ctx.fillStyle = '#7c4319';
+        ctx.beginPath();
+        ctx.moveTo(20, 18); ctx.lineTo(38, 9); ctx.lineTo(38, -22); ctx.lineTo(20, -13);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffd43b';
+        ctx.beginPath(); ctx.arc(34, -4, 2, 0, Math.PI * 2); ctx.fill();
+
+        // Cozy glowing windows on left wall
+        const drawWin = (wx, wy) => {
+            ctx.fillStyle = '#7dd3fc';
+            ctx.beginPath();
+            ctx.moveTo(wx, wy); ctx.lineTo(wx + 16, wy + 8); ctx.lineTo(wx + 16, wy - 10); ctx.lineTo(wx, wy - 18);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#fffbeb'; ctx.lineWidth = 2; ctx.stroke();
+        };
+        drawWin(-44, -12);
+        drawWin(-22, -1);
+
+        // Chimney
+        ctx.fillStyle = '#b94a3e';
+        ctx.fillRect(-26, -98, 16, 36);
+        ctx.fillStyle = '#7f2c23';
+        ctx.fillRect(-28, -100, 20, 5);
+
+        // Emit soft smoke puffs occasionally
+        if (Math.random() < 0.04) {
+            smokePuffs.push({ x: pos.x - 18, y: pos.y - 102, r: 5, life: 1 });
+        }
+
+        // Steep crimson roof
+        ctx.fillStyle = '#d63b2f';
+        ctx.beginPath();
+        ctx.moveTo(-68, -52); ctx.lineTo(0, -18); ctx.lineTo(0, -82); ctx.lineTo(-42, -88);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#7f1d1d'; ctx.lineWidth = 2.2; ctx.stroke();
+
+        ctx.fillStyle = '#b4291e';
+        ctx.beginPath();
+        ctx.moveTo(0, -18); ctx.lineTo(68, -52); ctx.lineTo(28, -94); ctx.lineTo(0, -82);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Roof ridge highlight
+        ctx.strokeStyle = '#ff9b85'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(-42, -88); ctx.lineTo(28, -94); ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawClassicRedBarn() {
+        // Classic Red Barn on top-right outside grid
+        const pos = gridToWorld(3.2, -2.6);
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath();
+        ctx.ellipse(6, 20, 76, 36, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Barn left wall (bright barn red)
+        ctx.fillStyle = '#c92a2a';
+        ctx.beginPath();
+        ctx.moveTo(-56, 2); ctx.lineTo(0, 30); ctx.lineTo(0, -34); ctx.lineTo(-56, -62);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#6b1212'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Barn right wall (darker barn red)
+        ctx.fillStyle = '#a61e1e';
+        ctx.beginPath();
+        ctx.moveTo(0, 30); ctx.lineTo(56, 2); ctx.lineTo(56, -62); ctx.lineTo(0, -34);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Iconic white X-cross barn doors on front-left wall
+        ctx.fillStyle = '#991b1b';
+        ctx.beginPath();
+        ctx.moveTo(-40, 10); ctx.lineTo(-12, 24); ctx.lineTo(-12, -12); ctx.lineTo(-40, -26);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-40, 10); ctx.lineTo(-12, -12);
+        ctx.moveTo(-12, 24); ctx.lineTo(-40, -26);
+        ctx.stroke();
+
+        // Gambrel roof (warm brown-grey shingles)
+        ctx.fillStyle = '#6b4226';
+        ctx.beginPath();
+        ctx.moveTo(-64, -58); ctx.lineTo(0, -24); ctx.lineTo(0, -88); ctx.lineTo(-40, -82);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#3f220e'; ctx.lineWidth = 2; ctx.stroke();
+
+        ctx.fillStyle = '#54321b';
+        ctx.beginPath();
+        ctx.moveTo(0, -24); ctx.lineTo(64, -58); ctx.lineTo(24, -96); ctx.lineTo(0, -88);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawWindmill(t) {
+        // Wooden Windmill with smoothly rotating blades near top corner
+        const pos = gridToWorld(-0.5, -2.5);
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath();
+        ctx.ellipse(4, 14, 34, 16, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stone base
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(-26, 10); ctx.lineTo(26, 10); ctx.lineTo(22, -14); ctx.lineTo(-22, -14);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Tapered wooden tower
+        ctx.fillStyle = '#b97a45';
+        ctx.beginPath();
+        ctx.moveTo(-22, -14); ctx.lineTo(22, -14); ctx.lineTo(14, -84); ctx.lineTo(-14, -84);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#5c3412'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Timber cross braces
+        ctx.strokeStyle = '#7c471b'; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(-18, -22); ctx.lineTo(15, -52);
+        ctx.moveTo(18, -22); ctx.lineTo(-15, -52);
+        ctx.stroke();
+
+        // Conical red cap
+        ctx.fillStyle = '#c92a2a';
+        ctx.beginPath();
+        ctx.moveTo(-19, -82); ctx.lineTo(19, -82); ctx.lineTo(0, -106);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#6b1212'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Smoothly rotating 4-blade sails
+        ctx.save();
+        ctx.translate(0, -76);
+        ctx.rotate(t * 0.75);
+        for (let i = 0; i < 4; i++) {
+            ctx.rotate(Math.PI / 2);
+            // Sail cloth
+            ctx.fillStyle = '#fff7e6';
+            ctx.strokeStyle = '#8b5a2b';
+            ctx.lineWidth = 1.6;
+            ctx.fillRect(4, -5, 42, 11);
+            ctx.strokeRect(4, -5, 42, 11);
+            // Wooden spar
+            ctx.fillStyle = '#6b3e17';
+            ctx.fillRect(0, -2, 48, 4);
+        }
+        // Center hub
+        ctx.fillStyle = '#ffd43b';
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    function drawSceneryTree(wx, wy, t, scale = 1, seed = 0) {
+        const sway = Math.sin(t * 1.6 + seed) * 2.5;
+        ctx.save();
+        ctx.translate(wx, wy);
+        ctx.scale(scale, scale);
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(4, 6, 26, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Trunk
+        ctx.fillStyle = '#7c4a21';
+        ctx.beginPath();
+        ctx.moveTo(-6, 4); ctx.lineTo(6, 4); ctx.lineTo(4, -26); ctx.lineTo(-4, -26);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lush layered foliage
+        ctx.fillStyle = '#2d7a22';
+        ctx.beginPath(); ctx.arc(sway * 0.6, -34, 24, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#40a829';
+        ctx.beginPath(); ctx.arc(-9 + sway, -42, 18, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(10 + sway, -40, 17, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#64cc3b';
+        ctx.beginPath(); ctx.arc(sway * 1.2, -52, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+    }
+
+    function drawPerimeterFences(backOnly) {
+        ctx.save();
+        const drawPostSegment = (p1, p2) => {
+            ctx.strokeStyle = '#8b5424';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y - 10); ctx.lineTo(p2.x, p2.y - 10);
+            ctx.moveTo(p1.x, p1.y - 18); ctx.lineTo(p2.x, p2.y - 18);
+            ctx.stroke();
+
+            ctx.fillStyle = '#a86932';
+            ctx.strokeStyle = '#5c3412';
+            ctx.lineWidth = 1.4;
+            ctx.fillRect(p1.x - 3, p1.y - 24, 6, 24);
+            ctx.strokeRect(p1.x - 3, p1.y - 24, 6, 24);
+        };
+
+        if (backOnly) {
+            // Top-left edge (gx = 0..13, gy = 0) & Top-right edge (gx = 0, gy = 0..13)
+            for (let i = 0; i < GRID_SIZE; i++) {
+                const a = gridToWorld(i - 0.5, -0.5);
+                const b = gridToWorld(i + 0.5, -0.5);
+                drawPostSegment(a, b);
+                const c = gridToWorld(-0.5, i - 0.5);
+                const d = gridToWorld(-0.5, i + 0.5);
+                drawPostSegment(c, d);
+            }
+        } else {
+            // Front edges with open gate around middle
+            for (let i = 0; i < GRID_SIZE; i++) {
+                if (i < 6 || i > 7) {
+                    const a = gridToWorld(GRID_SIZE - 0.5, i - 0.5);
+                    const b = gridToWorld(GRID_SIZE - 0.5, i + 0.5);
+                    drawPostSegment(a, b);
+                }
+                const c = gridToWorld(i - 0.5, GRID_SIZE - 0.5);
+                const d = gridToWorld(i + 0.5, GRID_SIZE - 0.5);
+                drawPostSegment(c, d);
+            }
+        }
+        ctx.restore();
+    }
+
+    // --- GRID TILES & ENTITIES ---
+    function drawGrassTile(wx, wy, gx, gy) {
+        const checker = (gx + gy) % 2 === 0;
+        drawDiamond(wx, wy, TILE_W, TILE_H);
+        ctx.fillStyle = checker ? '#6ec43e' : '#65bb37';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(42, 102, 18, 0.16)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Subtle deterministic tiny grass tufts or wildflowers
+        const h = tileHash(gx, gy);
+        if (h > 0.72) {
+            ctx.fillStyle = h > 0.88 ? '#fef08a' : '#f9a8d4';
+            ctx.beginPath();
+            ctx.arc(wx + (h - 0.8) * 35, wy + (h - 0.75) * 14, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function drawPlowedPlot(wx, wy, tile, now, t) {
+        const hasCrop = !!tile.crop;
+        // Raised outer rim
+        drawDiamond(wx, wy + 2, TILE_W - 4, TILE_H - 2);
+        ctx.fillStyle = '#5c3618';
+        ctx.fill();
+
+        // Top soil surface
+        drawDiamond(wx, wy, TILE_W - 6, TILE_H - 4);
+        ctx.fillStyle = hasCrop ? '#784722' : '#925a2d';
+        ctx.fill();
+
+        // Diagonal tilled furrows
+        ctx.strokeStyle = hasCrop ? '#573114' : '#6e411d';
+        ctx.lineWidth = 2.2;
+        for (let i = -2; i <= 2; i++) {
+            const ox = i * 7;
+            const oy = i * 3.5;
+            ctx.beginPath();
+            ctx.moveTo(wx - 22 + ox, wy + 10 + oy);
+            ctx.lineTo(wx + 22 + ox, wy - 12 + oy);
+            ctx.stroke();
+        }
+
+        if (hasCrop) {
+            drawCropOnPlot(wx, wy, tile, now, t);
+        }
+    }
+
+    function drawCropOnPlot(wx, wy, tile, now, t) {
+        const c = CROPS[tile.crop];
+        const total = Math.max(1, tile.readyAt - tile.plantedAt);
+        const prog = Math.min(1, Math.max(0, (now - tile.plantedAt) / total));
+        const stage = prog >= 1 ? 3 : prog >= 0.62 ? 2 : prog >= 0.28 ? 1 : 0;
+        const sway = stage >= 2 ? Math.sin(t * 3.2 + wx * 0.05) * (stage === 3 ? 3.5 : 1.5) : 0;
+
+        // Draw 5 little plant clusters across the diamond
+        const offsets = [[-16, 0], [0, -7], [16, 0], [0, 7], [0, 0]];
+        offsets.forEach(([ox, oy], idx) => {
+            const px = wx + ox;
+            const py = wy + oy;
+
+            if (stage === 0) {
+                // Tiny seeds & soil bumps
+                ctx.fillStyle = '#e6c88a';
+                ctx.beginPath(); ctx.ellipse(px, py, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+            } else if (stage === 1) {
+                // Fresh bright green sprouts
+                ctx.fillStyle = '#65d636';
+                ctx.beginPath();
+                ctx.ellipse(px - 3, py - 5, 4, 2.2, -0.5, 0, Math.PI * 2);
+                ctx.ellipse(px + 3, py - 5, 4, 2.2, 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                const h = stage === 3 ? 22 : 14;
+                if (c.id === 'wheat') {
+                    ctx.strokeStyle = stage === 3 ? '#eab308' : '#65a30d';
+                    ctx.lineWidth = 2.6;
+                    ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + sway * 0.5, py - h / 2, px + sway, py - h); ctx.stroke();
+                    if (stage === 3) {
+                        ctx.fillStyle = '#fde047';
+                        ctx.beginPath(); ctx.ellipse(px + sway, py - h, 3.5, 6.5, 0.15, 0, Math.PI * 2); ctx.fill();
+                    }
+                } else if (c.id === 'corn') {
+                    ctx.strokeStyle = '#2f9e44'; ctx.lineWidth = 3.2;
+                    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + sway, py - h - 4); ctx.stroke();
+                    if (stage === 3) {
+                        ctx.fillStyle = '#facc15';
+                        ctx.beginPath(); ctx.ellipse(px + sway + 3, py - h + 4, 3.5, 6, 0.3, 0, Math.PI * 2); ctx.fill();
+                    }
+                } else if (c.id === 'carrot') {
+                    if (stage === 3) {
+                        ctx.fillStyle = '#f97316';
+                        ctx.beginPath(); ctx.arc(px, py - 2, 5.5, 0, Math.PI * 2); ctx.fill();
+                    }
+                    ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(px, py - 4); ctx.lineTo(px - 5 + sway, py - 15);
+                    ctx.moveTo(px, py - 4); ctx.lineTo(px + sway, py - 18);
+                    ctx.moveTo(px, py - 4); ctx.lineTo(px + 5 + sway, py - 15);
+                    ctx.stroke();
+                } else if (c.id === 'sunflower') {
+                    ctx.strokeStyle = '#2f9e44'; ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + sway, py - h - 5); ctx.stroke();
+                    if (stage === 3) {
+                        ctx.fillStyle = '#facc15';
+                        ctx.beginPath(); ctx.arc(px + sway, py - h - 6, 7.5, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#713f12';
+                        ctx.beginPath(); ctx.arc(px + sway, py - h - 6, 3.8, 0, Math.PI * 2); ctx.fill();
+                    }
+                } else if (c.id === 'pumpkin') {
+                    ctx.fillStyle = '#228b22';
+                    ctx.beginPath(); ctx.ellipse(px, py - 3, 8, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+                    if (stage === 3 && idx % 2 === 0) {
+                        ctx.fillStyle = '#ea580c';
+                        ctx.beginPath(); ctx.ellipse(px, py - 7, 8, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#f97316';
+                        ctx.beginPath(); ctx.ellipse(px, py - 7, 4.5, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#3f6212';
+                        ctx.fillRect(px - 1.2, py - 16, 2.4, 4);
+                    }
+                } else {
+                    // Tomato / Strawberry bushy plants with bright fruits
+                    ctx.fillStyle = '#2b9348';
+                    ctx.beginPath(); ctx.arc(px + sway * 0.4, py - h * 0.55, stage === 3 ? 9 : 6, 0, Math.PI * 2); ctx.fill();
+                    if (stage === 3) {
+                        ctx.fillStyle = c.color;
+                        ctx.beginPath();
+                        ctx.arc(px - 3 + sway * 0.5, py - h * 0.6, 3.5, 0, Math.PI * 2);
+                        ctx.arc(px + 4 + sway * 0.5, py - h * 0.45, 3.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        });
+
+        // Ripe golden sparkles & bouncing harvest icon
+        if (stage === 3) {
+            const sparkleAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t * 4 + wx));
+            ctx.fillStyle = `rgba(255, 245, 150, ${sparkleAlpha})`;
+            ctx.beginPath();
+            ctx.arc(wx - 14, wy - 20 + Math.sin(t * 3) * 3, 2.8, 0, Math.PI * 2);
+            ctx.arc(wx + 15, wy - 14 + Math.cos(t * 3) * 3, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            drawFloatingBadge(wx, wy - 34, c.icon, '#fef08a', '#b45309', t);
+        }
+    }
+
+    function drawAnimal(wx, wy, tile, now, t) {
+        const def = ANIMALS[tile.id];
+        const ready = tile.status === 'ready' || (tile.status === 'producing' && now >= tile.readyAt);
+        const hungry = tile.status === 'hungry';
+
+        // Cozy little pasture pen grass patch
+        drawDiamond(wx, wy, TILE_W - 6, TILE_H - 4);
+        ctx.fillStyle = '#84cc3b';
+        ctx.fill();
+
+        // Gentle bobbing & wandering inside tile
+        const wanderX = Math.sin(t * 0.9 + wx * 0.1) * 7;
+        const bobY = Math.abs(Math.sin(t * 3.5 + wy * 0.1)) * 3.5;
+        const ax = wx + wanderX;
+        const ay = wy - bobY;
+
+        ctx.save();
+        ctx.translate(ax, ay);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath(); ctx.ellipse(0, 6 + bobY, 15, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+        if (tile.id === 'chicken') {
+            // Plump white hen
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.ellipse(0, -6, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            // Head
+            ctx.beginPath(); ctx.arc(8, -14, 6.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            // Red comb
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath(); ctx.arc(8, -21, 3.2, 0, Math.PI * 2); ctx.arc(11, -20, 2.5, 0, Math.PI * 2); ctx.fill();
+            // Orange beak
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath(); ctx.moveTo(13, -15); ctx.lineTo(19, -13); ctx.lineTo(13, -11); ctx.closePath(); ctx.fill();
+            // Eye
+            ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.arc(10, -15, 1.4, 0, Math.PI * 2); ctx.fill();
+            // Wing
+            ctx.fillStyle = '#f1f5f9';
+            ctx.beginPath(); ctx.ellipse(-2, -6, 6, 4, -0.2, 0, Math.PI * 2); ctx.fill();
+        } else if (tile.id === 'cow') {
+            // Cute spotted dairy cow
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+            // Legs
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(-12, -2, 4, 9); ctx.fillRect(6, -2, 4, 9);
+            // Body
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.ellipse(-2, -10, 17, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            // Black spots
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath(); ctx.ellipse(-7, -12, 5.5, 4, 0.3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(4, -7, 4.5, 3, -0.2, 0, Math.PI * 2); ctx.fill();
+            // Head
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.ellipse(14, -18, 8.5, 7.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            // Pink snout
+            ctx.fillStyle = '#fda4af';
+            ctx.beginPath(); ctx.ellipse(18, -15, 5.5, 4, 0, 0, Math.PI * 2); ctx.fill();
+            // Horns & eye
+            ctx.fillStyle = '#fde68a';
+            ctx.beginPath(); ctx.moveTo(10, -24); ctx.lineTo(8, -29); ctx.lineTo(13, -25); ctx.fill();
+            ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(15, -20, 1.5, 0, Math.PI * 2); ctx.fill();
+        } else {
+            // Fluffy sheep
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(-9, -2, 3.5, 8); ctx.fillRect(5, -2, 3.5, 8);
+            // Cloud wool puffs
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.4;
+            [[-8, -11, 9], [0, -15, 10], [8, -11, 9], [-2, -7, 9], [6, -7, 8]].forEach(([px, py, r]) => {
+                ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            });
+            // Dark face
+            ctx.fillStyle = '#334155';
+            ctx.beginPath(); ctx.ellipse(14, -13, 6.5, 5.5, 0.2, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(15, -14, 1.4, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+
+        // Status speech bubble
+        if (ready) {
+            const prod = GOODS[def.product];
+            drawFloatingBadge(wx, wy - 44, prod.icon, '#fef08a', '#b45309', t);
+        } else if (hungry) {
+            drawFloatingBadge(wx, wy - 44, '🌾', '#ffffff', '#ea580c', t, true);
+        }
+    }
+
+    function drawFruitTree(wx, wy, tile, now, t) {
+        const def = TREES[tile.id];
+        const ready = now >= tile.readyAt;
+        const sway = Math.sin(t * 2 + wx * 0.08) * 2.2;
+
+        ctx.save();
+        ctx.translate(wx, wy);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath(); ctx.ellipse(3, 5, 22, 10, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Trunk
+        ctx.fillStyle = '#7c471b';
+        ctx.beginPath();
+        ctx.moveTo(-6, 4); ctx.lineTo(6, 4); ctx.lineTo(4, -24); ctx.lineTo(-4, -24);
+        ctx.closePath();
+        ctx.fill();
+
+        // Canopy
+        ctx.fillStyle = '#2d8623';
+        ctx.beginPath(); ctx.arc(sway * 0.5, -34, 21, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#47b82f';
+        ctx.beginPath(); ctx.arc(-9 + sway, -40, 15, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(9 + sway, -38, 15, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#6ed645';
+        ctx.beginPath(); ctx.arc(sway, -48, 13, 0, Math.PI * 2); ctx.fill();
+
+        // Hanging fruits when ready
+        if (ready) {
+            ctx.fillStyle = tile.id === 'apple_tree' ? '#ef4444' : '#fb923c';
+            [[-10, -38], [8, -42], [-1, -28], [11, -30], [-12, -29]].forEach(([fx, fy]) => {
+                ctx.beginPath(); ctx.arc(fx + sway, fy, 4.2, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.beginPath(); ctx.arc(fx + sway - 1.2, fy - 1.2, 1.2, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = tile.id === 'apple_tree' ? '#ef4444' : '#fb923c';
+            });
+        }
+        ctx.restore();
+
+        if (ready) {
+            drawFloatingBadge(wx, wy - 68, def.icon, '#fef08a', '#b45309', t);
+        }
+    }
+
+    function drawMachine(wx, wy, tile, now, t) {
+        const def = MACHINES[tile.id];
+        const working = tile.recipe && now < tile.readyAt;
+        const ready = tile.recipe && now >= tile.readyAt;
+        const bounce = working ? Math.sin(t * 10) * 1.6 : 0;
+
+        ctx.save();
+        ctx.translate(wx, wy + bounce);
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        drawDiamond(0, 4, TILE_W - 8, TILE_H - 4);
+        ctx.fill();
+
+        if (tile.id === 'bakery') {
+            // Warm stone & brick bakery mill
+            ctx.fillStyle = '#f5deb3';
+            ctx.beginPath();
+            ctx.moveTo(-28, 2); ctx.lineTo(0, 16); ctx.lineTo(0, -24); ctx.lineTo(-28, -38);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#7c471b'; ctx.lineWidth = 1.8; ctx.stroke();
+
+            ctx.fillStyle = '#dec08c';
+            ctx.beginPath();
+            ctx.moveTo(0, 16); ctx.lineTo(28, 2); ctx.lineTo(28, -38); ctx.lineTo(0, -24);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            // Glowing brick oven arch
+            ctx.fillStyle = working ? '#fb923c' : '#572a13';
+            ctx.beginPath(); ctx.arc(-14, -4, 7, Math.PI, 0); ctx.lineTo(-7, 6); ctx.lineTo(-21, -1); ctx.closePath(); ctx.fill();
+
+            // Warm terracotta roof
+            ctx.fillStyle = '#d9532f';
+            ctx.beginPath();
+            ctx.moveTo(-34, -36); ctx.lineTo(0, -18); ctx.lineTo(34, -36); ctx.lineTo(0, -58);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#7c2210'; ctx.stroke();
+
+            // Chimney + steam when baking
+            ctx.fillStyle = '#a83c24';
+            ctx.fillRect(8, -64, 10, 20);
+            if (working) {
+                const puffY = -68 - ((t * 25) % 18);
+                ctx.fillStyle = `rgba(255,255,255,${1 - ((t * 25) % 18) / 18})`;
+                ctx.beginPath(); ctx.arc(13, puffY, 5, 0, Math.PI * 2); ctx.fill();
+            }
+        } else {
+            // Dairy Press building (blue & cream farmhouse style)
+            ctx.fillStyle = '#eff6ff';
+            ctx.beginPath();
+            ctx.moveTo(-28, 2); ctx.lineTo(0, 16); ctx.lineTo(0, -22); ctx.lineTo(-28, -36);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8; ctx.stroke();
+
+            ctx.fillStyle = '#dbeafe';
+            ctx.beginPath();
+            ctx.moveTo(0, 16); ctx.lineTo(28, 2); ctx.lineTo(28, -36); ctx.lineTo(0, -22);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            // Blue roof
+            ctx.fillStyle = '#2563eb';
+            ctx.beginPath();
+            ctx.moveTo(-34, -34); ctx.lineTo(0, -16); ctx.lineTo(34, -34); ctx.lineTo(0, -56);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#1e3a8a'; ctx.stroke();
+
+            // Golden cheese press wheel on side
+            ctx.save();
+            ctx.translate(14, -10);
+            if (working) ctx.rotate(t * 3);
+            ctx.strokeStyle = '#d97706'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.moveTo(0, -8); ctx.lineTo(0, 8); ctx.stroke();
+            ctx.restore();
+        }
+        ctx.restore();
+
+        if (ready) {
+            const rec = def.recipes.find(r => r.id === tile.recipe);
+            drawFloatingBadge(wx, wy - 70, rec ? rec.icon : '✨', '#fef08a', '#b45309', t);
+        } else if (working) {
+            // Small compact progress pill above working machine
+            const prog = Math.min(1, (now - tile.startedAt) / Math.max(1, tile.readyAt - tile.startedAt));
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(wx - 22, wy - 68, 44, 7);
+            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(wx - 21, wy - 67, 42 * prog, 5);
+        }
+    }
+
+    function drawDecor(wx, wy, tile, t) {
+        ctx.save();
+        ctx.translate(wx, wy);
+        if (tile.id === 'flower_bed') {
+            drawDiamond(0, 0, 56, 28);
+            ctx.fillStyle = '#7c471b'; ctx.fill();
+            drawDiamond(0, -2, 48, 24);
+            ctx.fillStyle = '#3f9128'; ctx.fill();
+            const cols = ['#f43f5e', '#facc15', '#ec4899', '#a855f7', '#fb923c'];
+            [[-12, -2], [0, -7], [12, -2], [-4, 3], [6, 3]].forEach(([fx, fy], i) => {
+                ctx.fillStyle = cols[i];
+                ctx.beginPath(); ctx.arc(fx, fy - 4 + Math.sin(t * 2 + i) * 1, 4.2, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath(); ctx.arc(fx, fy - 4 + Math.sin(t * 2 + i) * 1, 1.5, 0, Math.PI * 2); ctx.fill();
+            });
+        } else if (tile.id === 'hay_bale') {
+            const drawBale = (bx, by) => {
+                ctx.fillStyle = '#eab308';
+                ctx.strokeStyle = '#a16207'; ctx.lineWidth = 1.5;
+                ctx.fillRect(bx - 13, by - 10, 26, 13);
+                ctx.strokeRect(bx - 13, by - 10, 26, 13);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(bx - 13, by - 14, 26, 5);
+                ctx.strokeStyle = '#92400e';
+                ctx.beginPath(); ctx.moveTo(bx - 5, by - 14); ctx.lineTo(bx - 5, by + 3); ctx.moveTo(bx + 5, by - 14); ctx.lineTo(bx + 5, by + 3); ctx.stroke();
+            };
+            drawBale(-8, 4);
+            drawBale(10, 5);
+            drawBale(1, -8);
+        } else if (tile.id === 'well') {
+            ctx.fillStyle = '#94a3b8';
+            ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.ellipse(0, 2, 16, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillRect(-16, -12, 32, 14);
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath(); ctx.ellipse(0, -12, 14, 6, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#6b3e17'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(-13, -12); ctx.lineTo(-13, -36); ctx.moveTo(13, -12); ctx.lineTo(13, -36); ctx.stroke();
+            ctx.fillStyle = '#b91c1c';
+            ctx.beginPath(); ctx.moveTo(-20, -34); ctx.lineTo(20, -34); ctx.lineTo(0, -50); ctx.closePath(); ctx.fill();
+        } else if (tile.id === 'scarecrow') {
+            const tilt = Math.sin(t * 2) * 0.06;
+            ctx.rotate(tilt);
+            ctx.strokeStyle = '#78350f'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, -34); ctx.moveTo(-16, -22); ctx.lineTo(16, -22); ctx.stroke();
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(-7, -26, 14, 15);
+            ctx.fillStyle = '#fde68a';
+            ctx.beginPath(); ctx.arc(0, -34, 7, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ca8a04';
+            ctx.beginPath(); ctx.ellipse(0, -40, 12, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-7, -40); ctx.lineTo(7, -40); ctx.lineTo(0, -50); ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawFloatingBadge(x, y, icon, bgColor, borderColor, t, speechTail = false) {
+        const bob = Math.sin(t * 4.5 + x * 0.04) * 4;
+        const by = y + bob;
+        ctx.save();
+        ctx.fillStyle = bgColor;
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(x, by, 13.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        if (speechTail) {
+            ctx.beginPath();
+            ctx.moveTo(x - 4, by + 12);
+            ctx.lineTo(x + 4, by + 12);
+            ctx.lineTo(x, by + 18);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        ctx.font = '15px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(icon, x, by + 1);
+        ctx.restore();
+    }
+
+    /* ============================================================================
+       12. MAIN 60FPS ANIMATION LOOP
+       ============================================================================ */
+    let lastSaveTick = 0;
+    let lastUiTick = 0;
+
+    function tickAndRender(timestamp) {
+        const t = timestamp / 1000;
+        const now = Date.now();
+
+        // 1. Energy auto-regeneration (1 energy every 10 seconds)
+        if (state.energy < MAX_ENERGY) {
+            const elapsed = now - state.lastEnergyTime;
+            if (elapsed >= ENERGY_REGEN_MS) {
+                const gained = Math.floor(elapsed / ENERGY_REGEN_MS);
+                state.energy = Math.min(MAX_ENERGY, state.energy + gained);
+                state.lastEnergyTime += gained * ENERGY_REGEN_MS;
+                updateHUD();
+            }
+            const timerEl = document.getElementById('hud-energy-timer');
+            if (state.energy < MAX_ENERGY) {
+                const rem = Math.ceil((ENERGY_REGEN_MS - (now - state.lastEnergyTime)) / 1000);
+                timerEl.textContent = `(${rem}s)`;
+                timerEl.classList.remove('hidden');
+            } else {
+                timerEl.classList.add('hidden');
+            }
+        } else {
+            document.getElementById('hud-energy-timer').classList.add('hidden');
+        }
+
+        // 2. Smooth camera easing
+        cam.x += (cam.targetX - cam.x) * 0.16;
+        cam.y += (cam.targetY - cam.y) * 0.16;
+        cam.zoom += (cam.targetZoom - cam.zoom) * 0.16;
+
+        // 3. Periodic inspect ring update & auto-save
+        if (now - lastUiTick > 250) {
+            lastUiTick = now;
+            if (inspectedTile) updateInspectPopup();
+        }
+        if (now - lastSaveTick > 5000) {
+            lastSaveTick = now;
+            saveState();
+        }
+
+        // 4. Begin Canvas Frame
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        drawBackgroundMeadow();
+
+        // Transform into World Space
+        ctx.translate(viewW / 2, viewH / 2);
+        ctx.scale(cam.zoom, cam.zoom);
+        ctx.translate(-cam.x, -cam.y);
+
+        // Background non-grid scenery
+        drawDirtRoadsAndFarmBase();
+        drawSparklingPond(t);
+        drawWindmill(t);
+        drawFarmhouse(t);
+        drawClassicRedBarn();
+
+        // Back perimeter trees
+        [[-3, -0.5, 1.1], [-1.8, -1.5, 0.9], [1.2, -2.2, 1.0], [5.8, -2.0, 1.05], [8.5, -1.8, 0.95], [-2.2, 5.5, 1.1], [-1.8, 9.2, 1.0]].forEach(([tx, ty, sc], i) => {
+            const p = gridToWorld(tx, ty);
+            drawSceneryTree(p.x, p.y, t, sc, i * 1.3);
+        });
+
+        drawPerimeterFences(true);
+
+        // 5. Render 14x14 Isometric Grid in Back-to-Front Painter's Order
+        for (let gy = 0; gy < GRID_SIZE; gy++) {
+            for (let gx = 0; gx < GRID_SIZE; gx++) {
+                const tile = state.grid[gy][gx];
+                const { x, y } = gridToWorld(gx, gy);
+
+                // Always draw base grass under everything
+                drawGrassTile(x, y, gx, gy);
+
+                // Placement / Mode Highlight Preview
+                if (hoveredTile && hoveredTile.gx === gx && hoveredTile.gy === gy && currentMode !== 'hand') {
+                    let valid = false;
+                    if (currentMode === 'plow' || currentMode === 'build') valid = tile.type === 'grass';
+                    if (currentMode === 'plant') valid = tile.type === 'plot' && !tile.crop;
+                    drawDiamond(x, y, TILE_W - 2, TILE_H - 2);
+                    ctx.fillStyle = valid ? 'rgba(74, 222, 128, 0.45)' : 'rgba(248, 113, 113, 0.45)';
+                    ctx.fill();
+                    ctx.strokeStyle = valid ? '#16a34a' : '#dc2626';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                }
+
+                if (tile.type === 'plot') {
+                    drawPlowedPlot(x, y, tile, now, t);
+                } else if (tile.type === 'animal') {
+                    drawAnimal(x, y, tile, now, t);
+                } else if (tile.type === 'tree') {
+                    drawFruitTree(x, y, tile, now, t);
+                } else if (tile.type === 'machine') {
+                    drawMachine(x, y, tile, now, t);
+                } else if (tile.type === 'decor') {
+                    drawDecor(x, y, tile, t);
+                }
+            }
+        }
+
+        // Front fences & foreground trees
+        drawPerimeterFences(false);
+        [[14.8, 2.2, 1.0], [14.8, 11.2, 1.15], [3.5, 14.9, 1.05], [10.8, 14.8, 0.95]].forEach(([tx, ty, sc], i) => {
+            const p = gridToWorld(tx, ty);
+            drawSceneryTree(p.x, p.y, t, sc, i * 2.1 + 5);
+        });
+
+        // Chimney smoke puffs
+        for (let i = smokePuffs.length - 1; i >= 0; i--) {
+            const sp = smokePuffs[i];
+            sp.y -= 0.35;
+            sp.x += 0.2;
+            sp.r += 0.12;
+            sp.life -= 0.012;
+            if (sp.life <= 0) { smokePuffs.splice(i, 1); continue; }
+            ctx.fillStyle = `rgba(255,255,255,${sp.life * 0.55})`;
+            ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Particles (Coins, Stars, Dirt)
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.12;
+            p.life -= p.decay;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            ctx.save();
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Floating "+Coins / +XP" popups
+        for (let i = popups.length - 1; i >= 0; i--) {
+            const pop = popups[i];
+            pop.y -= 0.75;
+            pop.life -= 0.016;
+            if (pop.life <= 0) { popups.splice(i, 1); continue; }
+            ctx.save();
+            ctx.globalAlpha = Math.min(1, pop.life * 1.4);
+            ctx.font = 'bold 16px Fredoka, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'rgba(42, 20, 5, 0.85)';
+            ctx.strokeText(pop.text, pop.x, pop.y);
+            ctx.fillStyle = pop.color;
+            ctx.fillText(pop.text, pop.x, pop.y);
+            ctx.restore();
+        }
+
+        // Soft drifting clouds
+        clouds.forEach(cl => {
+            cl.x += cl.speed;
+            if (cl.x > 850) cl.x = -850;
+            ctx.save();
+            ctx.translate(cl.x, cl.y);
+            ctx.scale(cl.scale, cl.scale);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.beginPath();
+            ctx.arc(0, 0, 38, 0, Math.PI * 2);
+            ctx.arc(34, -8, 30, 0, Math.PI * 2);
+            ctx.arc(-32, -4, 28, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+
+        ctx.restore();
+        requestAnimationFrame(tickAndRender);
+    }
+
+    /* ============================================================================
+       13. BOOTSTRAP
+       ============================================================================ */
+    window.addEventListener('resize', resizeCanvas);
+    window.onload = function () {
+        resizeCanvas();
+        loadState();
+        initAmbientEffects();
+        centerCamera();
+        // Snap camera immediately on first boot
+        cam.x = cam.targetX;
+        cam.y = cam.targetY;
+        cam.zoom = cam.targetZoom;
+        updateHUD();
+        requestAnimationFrame(tickAndRender);
+        setTimeout(() => showToast('🌾 Tap the ripe Wheat plots to harvest!', 'success'), 500);
+    };
+    </script>
+</body>
+</html>
